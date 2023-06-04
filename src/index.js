@@ -7,13 +7,22 @@ require( 'dotenv' ).config();
 const API_TELEGRAM = process.env.API_TELEGRAM;
 const API_OPENAI = process.env.API_OPENAI;
 
-try {
+
 // Iniciamos Bot de Telegram
 const bot = new Telegraf( API_TELEGRAM );
 
+// Conectamos con la api de Open AI.
+const config = new Configuration({
+    apiKey: API_OPENAI
+});
+const openai = new OpenAIApi( config );
+
+// Creamos array de conversaciones para mantener en memoria los diferentes chats
+const conversations = [];
+
 // Definimos el tono del bot y algunas reglas
-const lastMessages = [
-    { role: 'system', content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA.
+const firstMessage = { 
+    role: 'system', content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA.
 
     Eres un experto en ia. Adopta las instrucciones que te voy a dar hasta el final de la conversación.
     Primero te diré si tengo alguna duda específica sobre la IA que me gustaría resolver, o si prefiero realizar un breve test para ver cómo puedes ayudarme a generar contenido con la IA.
@@ -25,8 +34,9 @@ const lastMessages = [
     Al acabar de responder las 3 preguntas de test en total (contando la primera que te especifiqué) las cuales crearas personalizadamente para cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
     Si sus respuestas se decantan por crear imagenes me indicaras www.dreamstudio.com y me daras un prompt para crear mi primera imagen. 
     
-    Al final se ofrecera el ebook llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información` }
-];
+    Al final se ofrecera el ebook llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información` 
+}
+;
 
 // Mensaje que se muestra al iniciar el Chat
 bot.start(( chat ) => {
@@ -37,49 +47,73 @@ bot.start(( chat ) => {
 bot.on( 'message', async ( chat ) => {
     let reply = "";
 
-    // Recuperamos el mensaje del usuario.
+    //Log del chat de telegram con el id, nombre y tipo de chat
+    console.log({
+        telegramMessageChat: chat.message.chat,
+    });
+    
+    // Recuperamos el mensaje y el id del usuario.
     let message = chat.message.text;
+    const chatId = chat.message.chat.id;
 
-    // Filtramos el mensaje '/start' que inicia el chat
+
+    let conversationIndex = conversations.findIndex(c => c.id === chatId)
+
+    // Filtramos el mensaje '/start' que inicia el chat, si hay un chat guardado con ese id lo reiniciamos
     if (message.toString().toLowerCase() === '/start') {
+        if (conversationIndex !== -1) conversations[conversationIndex].lastMessages = [];
         return;
     }
 
     // Guardamos el mensaje en el array para darle contexto al bot.
-    lastMessages.push( { role: 'user', content: message });
+    if (conversationIndex !== -1) {
+        conversations[conversationIndex].lastMessages.push({ role: 'user', content: message })
+    } else {
+        conversationIndex = conversations.length;
+        conversations.push({
+            id: chatId,
+            lastMessages: [firstMessage, { role: 'user', content: message }],
+        })
+    }
 
-    // Conectamos con la api de Open AI.
-    const config = new Configuration({
-        apiKey: API_OPENAI
-    });
-    const openai = new OpenAIApi( config );
+    // Generando el mensaje...
+    await chat.sendChatAction('typing');
 
+    try {
     // Genera la respuesta usando la API de OpenAI
     const response = await openai.createChatCompletion({
         model: 'gpt-3.5-turbo',
-        messages: lastMessages
+        messages: conversations[conversationIndex].lastMessages
     });
+
+    // Log de la response de chatgpt
+    console.log({ chatGptResponse: response.data });
 
     // Envía la respuesta al usuario
     reply = response.data.choices[0].message['content'];
-
     chat.reply( reply );
 
     // Guardamos la respuesta.
-    lastMessages.push( 
+    conversations[conversationIndex].lastMessages.push( 
         { role: 'assistant', content: reply }
     );
 
     // Si los mensajes guardados son mas de 20, eliminamos el primero.
-    if( lastMessages.length > 20 ){
-        lastMessages.slice( 1, 1 );
+    if( conversations[conversationIndex].lastMessages.length > 20 ){
+        conversations[conversationIndex].lastMessages.slice( 1, 1 );
     }
-
+    } catch ( e ) {
+        console.log( e );
+        // Si hay un error comenzamos de vuelta el chat
+        chat.reply('Se ha producido un error. Reiniciando chat...')
+        console.log('Reiniciando chat...');
+        conversations[conversationIndex].lastMessages = [];
+        chat.reply('¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?');
+    }
 });
 
 // Inicia el bot
 bot.launch();
 console.log('bot iniciado')
-} catch ( e ) {
-    console.log( e );
-}
+
+
