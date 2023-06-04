@@ -42,7 +42,7 @@ const firstMessage = {
 bot.start(( chat ) => {
     const chatId = chat.message.chat.id;
     let conversationIndex = conversations.findIndex(c => c.id === chatId)
-    if (conversationIndex !== -1) conversations[conversationIndex].lastMessages = [];
+    if (conversationIndex !== -1) conversations[conversationIndex].lastMessages = [firstMessage];
     chat.reply('¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?');
 });
 
