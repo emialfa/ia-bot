@@ -22,28 +22,57 @@ const conversations = [];
 
 // Definimos el tono del bot y algunas reglas
 const firstMessage = { 
-    role: 'system', content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA.
+    role: 'system', content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA
 
-    Eres un experto en ia. Adopta las instrucciones que te voy a dar hasta el final de la conversación.
-    Primero te diré si tengo alguna duda específica sobre la IA que me gustaría resolver, o si prefiero realizar un breve test para ver cómo puedes ayudarme a generar contenido con la IA.
-    Si se decide hacer el test, me haras una pregunta del test siempre en un mensaje diferente siguiente, en el siguiente prompt me vas a hacer un test para ver cómo puedes ayudarme a generar contenido con la IA primero me harás una pregunta de test de ABC preguntandome de que quiero hablar (esta será la primera de 3 preguntas que luego te detallaré mas adelante)
+    Eres un experto en ia adopta las instrucciones que te voy a dar hasta el final de la conversación.
+    Primero me saludaras y me preguntaras si tengo alguna duda sobre la ia o quiero hacer un test para averiguar como puedes ayudarme.
+    Si se decide hacer el test, me haras una pregunta del test siempre en un mensaje diferente siguiente,  en el siguiente promt me vas a hacer un test para ver cómo puedes ayudarme a generar contenido con la IA primero me harás una pregunta de test de ABC preguntandome de que quiero hablar
     A) consultas sobre negocios y marketing
-    B) crear contenidos creativos, imagenes, guiones de video, canciones
+    B) crear contenidos creativos, imagenes, guiones de video, cancio es
     C) resolver preguntas por un medico, abogado, psicólogo, nutricionista, marketer
-    Una vez responda, en las 2 siguientes interacciones me haras 2 preguntas mas de test (de a una por mensaje) con 3 opciones cada una, en el mismo formato ABC, consecutivamente cada una en un prompt diferente. 
-    Al acabar de responder las 3 preguntas de test en total (contando la primera que te especifiqué) las cuales crearas personalizadamente para cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
+    Una vez responda, en las 2 siguientes interacciones  me haras 2 preguntas de test mas con 3 opciones cada una, consecutivamente cada una en promts diferentes. 
+    Al acabar de responder las 3 preguntas de test en total, que crearas personalizadamente a cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
     Si sus respuestas se decantan por crear imagenes me indicaras www.dreamstudio.com y me daras un prompt para crear mi primera imagen. 
     
-    Al final se ofrecera el ebook llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información` 
+    Si al final se resuelven las dudas se ofrecera el ebook de llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información` 
 }
 ;
 
-// Mensaje que se muestra al iniciar el Chat
-bot.start(( chat ) => {
+const startBot = async (chat) => {
+    await chat.sendChatAction('typing');
+
+    //Log del chat de telegram con el id, nombre y tipo de chat
+    console.log({
+        telegramMessageChat: chat.message.chat,
+    });
+
+    const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [firstMessage]
+    });
+    reply = response.data.choices[0].message['content'];
+    chat.reply( reply );
+
+    // Log de la response de chatgpt
+    console.log({ chatGptResponse: response.data });
+
+    // Guardamos la respuesta.
     const chatId = chat.message.chat.id;
     let conversationIndex = conversations.findIndex(c => c.id === chatId)
-    if (conversationIndex !== -1) conversations[conversationIndex].lastMessages = [firstMessage];
-    chat.reply('¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?');
+
+    if (conversationIndex !== -1) {
+        conversations.splice(conversationIndex, 1);
+    }
+
+    conversations.push({
+       id: chatId,
+       lastMessages: [firstMessage, { role: 'assistant', content: reply }],
+    })
+}
+
+// Mensaje que se muestra al iniciar el Chat
+bot.start(async ( chat ) => {
+    await startBot(chat);
 });
 
 // Escuchamos las peticiones del usuario.
@@ -64,7 +93,6 @@ bot.on( 'message', async ( chat ) => {
 
     // Filtramos el mensaje '/start' que inicia el chat, si hay un chat guardado con ese id lo reiniciamos
     if (message.toString().toLowerCase() === '/start') {
-        if (conversationIndex !== -1) conversations[conversationIndex].lastMessages = [];
         return;
     }
 
@@ -107,16 +135,13 @@ bot.on( 'message', async ( chat ) => {
     }
     } catch ( e ) {
         console.log( e );
+
         // Si hay un error comenzamos de vuelta el chat
-        chat.reply('Se ha producido un error. Reiniciando chat...')
-        console.log('Reiniciando chat...');
-        conversations[conversationIndex].lastMessages = [];
-        chat.reply('¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?');
+        chat.reply('Se ha producido un error. Reiniciando chat...');
+        startBot(chat);
     }
 });
 
 // Inicia el bot
 bot.launch();
 console.log('bot iniciado')
-
-
