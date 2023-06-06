@@ -3,15 +3,37 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 // APIs
-const API_TELEGRAM = process.env.API_TELEGRAM;
+const API_TELEGRAM_GEPETOBOT = process.env.API_TELEGRAM_GEPETOBOT;
+const API_TELEGRAM_IAEXPERT = process.env.API_TELEGRAM_IAEXPERT;
+
 const API_OPENAI = process.env.API_OPENAI;
+const PROMPT = `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA
 
-// Iniciamos Bot de Telegram
-const bot = new Telegraf(API_TELEGRAM);
+Eres un experto en ia adopta las instrucciones que te voy a dar hasta el final de la conversación.
+Primero me saludaras y me preguntaras si tengo alguna duda sobre la ia o quiero hacer un test para averiguar como puedes ayudarme.
+Si se decide hacer el test, me haras una pregunta del test siempre en un mensaje diferente siguiente,  en el siguiente promt me vas a hacer un test para ver cómo puedes ayudarme a generar contenido con la IA primero me harás una pregunta de test de ABC preguntandome de que quiero hablar
+A) consultas sobre negocios y marketing
+B) crear contenidos creativos, imagenes, guiones de video, cancio es
+C) resolver preguntas por un medico, abogado, psicólogo, nutricionista, marketer
+Una vez responda, en las 2 siguientes interacciones  me haras 2 preguntas de test mas con 3 opciones cada una, consecutivamente cada una en promts diferentes. 
+Al acabar de responder las 3 preguntas de test en total, que crearas personalizadamente a cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
+Si sus respuestas se decantan por crear imagenes me indicaras www.dreamstudio.com y me daras un prompt para crear mi primera imagen. 
 
+Si al final se resuelven las dudas se ofrecera el ebook de llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información`
+
+const botsInitialized = [];
+
+const stopBot = (botToken) => {
+  const botToStop = botsInitialized.find(bot => bot.token === botToken);
+  botToStop.stop();
+}
+
+const initializeBot = (apiTelegram, apiOpenai, prompt) => {// Iniciamos Bot de Telegram
+const bot = new Telegraf(apiTelegram);
+botsInitialized.push(bot);
 // Conectamos con la api de Open AI.
 const config = new Configuration({
-  apiKey: API_OPENAI,
+  apiKey: apiOpenai,
 });
 const openai = new OpenAIApi(config);
 
@@ -21,19 +43,7 @@ const conversations = [];
 // Definimos el tono del bot y algunas reglas
 const firstMessage = {
   role: "system",
-  content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA
-
-    Eres un experto en ia adopta las instrucciones que te voy a dar hasta el final de la conversación.
-    Primero me saludaras y me preguntaras si tengo alguna duda sobre la ia o quiero hacer un test para averiguar como puedes ayudarme.
-    Si se decide hacer el test, me haras una pregunta del test siempre en un mensaje diferente siguiente,  en el siguiente promt me vas a hacer un test para ver cómo puedes ayudarme a generar contenido con la IA primero me harás una pregunta de test de ABC preguntandome de que quiero hablar
-    A) consultas sobre negocios y marketing
-    B) crear contenidos creativos, imagenes, guiones de video, cancio es
-    C) resolver preguntas por un medico, abogado, psicólogo, nutricionista, marketer
-    Una vez responda, en las 2 siguientes interacciones  me haras 2 preguntas de test mas con 3 opciones cada una, consecutivamente cada una en promts diferentes. 
-    Al acabar de responder las 3 preguntas de test en total, que crearas personalizadamente a cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
-    Si sus respuestas se decantan por crear imagenes me indicaras www.dreamstudio.com y me daras un prompt para crear mi primera imagen. 
-    
-    Si al final se resuelven las dudas se ofrecera el ebook de llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información`,
+  content: prompt,
 };
 const startBot = async (chat) => {
   await chat.sendChatAction("typing");
@@ -44,7 +54,7 @@ const startBot = async (chat) => {
   });
 
   const response = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: [firstMessage],
   });
   reply = response.data.choices[0].message["content"];
@@ -145,3 +155,7 @@ bot.on("message", async (chat) => {
 // Inicia el bot
 bot.launch();
 console.log("bot iniciado");
+}
+
+initializeBot(API_TELEGRAM_GEPETOBOT, API_OPENAI, PROMPT);
+initializeBot(API_TELEGRAM_IAEXPERT, API_OPENAI, PROMPT);
