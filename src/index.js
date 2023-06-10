@@ -1,126 +1,149 @@
 const { Telegraf } = require("telegraf");
-const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 // APIs
-const API_TELEGRAM = process.env.API_TELEGRAM;
-const API_OPENAI = process.env.API_OPENAI;
+const openaiApi = require("./config/openai.config");
+const { gepetoBot, IAExpert } = require("./config/telegramBots.config");
 
-// Iniciamos Bot de Telegram
-const bot = new Telegraf(API_TELEGRAM);
+const botsInitialized = [];
 
-// Conectamos con la api de Open AI.
-const config = new Configuration({
-  apiKey: API_OPENAI,
-});
-const openai = new OpenAIApi(config);
+const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
+  // Iniciamos Bot de Telegram
+  const bot = new Telegraf(apiTokenTelegram);
+  botsInitialized.push(bot);
 
-// Creamos array de conversaciones para mantener en memoria los diferentes chats
-const conversations = [];
+  // Creamos array de conversaciones para mantener en memoria los diferentes chats
+  const conversations = [];
 
-// Definimos el tono del bot y algunas reglas
-const firstMessage = {
-  role: "system",
-  content: `Hemos diseñado un bot basado en gpt4 para que con unas breves preguntas  y poder crear vuestra primera obra unica en texto o imagen con IA.
+  // Definimos el tono del bot y algunas reglas
+  const firstMessage = {
+    role: "system",
+    content: prompt,
+  };
 
-    Eres un experto en ia. Adopta las instrucciones que te voy a dar hasta el final de la conversación.
-    Primero te diré si tengo alguna duda específica sobre la IA que me gustaría resolver, o si prefiero realizar un breve test para ver cómo puedes ayudarme a generar contenido con la IA.
-    Si se decide hacer el test, me haras una pregunta del test siempre en un mensaje diferente siguiente, en el siguiente prompt me vas a hacer un test para ver cómo puedes ayudarme a generar contenido con la IA primero me harás una pregunta de test de ABC preguntandome de que quiero hablar (esta será la primera de 3 preguntas que luego te detallaré mas adelante)
-    A) consultas sobre negocios y marketing
-    B) crear contenidos creativos, imagenes, guiones de video, canciones
-    C) resolver preguntas por un medico, abogado, psicólogo, nutricionista, marketer
-    Una vez responda, en las 2 siguientes interacciones me haras 2 preguntas mas de test (de a una por mensaje) con 3 opciones cada una, en el mismo formato ABC, consecutivamente cada una en un prompt diferente. 
-    Al acabar de responder las 3 preguntas de test en total (contando la primera que te especifiqué) las cuales crearas personalizadamente para cada caso, el objetivo es ver que puedes crear para mi. Y luego me daras una propuesta instrucciones y una propuesta 
-    Si sus respuestas se decantan por crear imagenes me indicaras www.dreamstudio.com y me daras un prompt para crear mi primera imagen. 
-    
-    Al final se ofrecera el ebook llamado "IA para todos" que puede encontrar en la url www.crececonandrea.com, o si lo prefiere puede darnos su numero para que lo llamemos para ampliar la información`,
-};
-// Mensaje que se muestra al iniciar el Chat
-bot.start((chat) => {
-  const chatId = chat.message.chat.id;
-  let conversationIndex = conversations.findIndex((c) => c.id === chatId);
-  if (conversationIndex !== -1)
-    conversations[conversationIndex].lastMessages = [firstMessage];
-  chat.reply(
-    "¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?"
-  );
-});
+  const startBot = async (chat) => {
+    await chat.sendChatAction("typing");
 
-// Escuchamos las peticiones del usuario.
-bot.on("message", async (chat) => {
-  let reply = "";
-
-  //Log del chat de telegram con el id, nombre y tipo de chat
-  console.log({
-    telegramMessageChat: chat.message.chat,
-  });
-
-  // Recuperamos el mensaje y el id del usuario.
-  let message = chat.message.text;
-  const chatId = chat.message.chat.id;
-
-  let conversationIndex = conversations.findIndex((c) => c.id === chatId);
-
-  // Filtramos el mensaje '/start' que inicia el chat, si hay un chat guardado con ese id lo reiniciamos
-  if (message.toString().toLowerCase() === "/start") {
-    if (conversationIndex !== -1)
-      conversations[conversationIndex].lastMessages = [];
-    return;
-  }
-
-  // Guardamos el mensaje en el array para darle contexto al bot.
-  if (conversationIndex !== -1) {
-    conversations[conversationIndex].lastMessages.push({
-      role: "user",
-      content: message,
+    //Log del chat de telegram con el id, nombre y tipo de chat
+    console.log({
+      telegramMessageChat: chat.message.chat,
     });
-  } else {
-    conversationIndex = conversations.length;
-    conversations.push({
-      id: chatId,
-      lastMessages: [firstMessage, { role: "user", content: message }],
-    });
-  }
 
-  // Generando el mensaje...
-  await chat.sendChatAction("typing");
-
-  try {
-    // Genera la respuesta usando la API de OpenAI
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: conversations[conversationIndex].lastMessages,
+      model,
+      messages: [firstMessage],
     });
+
+    reply = response.data.choices[0].message["content"];
+    chat.reply(reply);
 
     // Log de la response de chatgpt
     console.log({ chatGptResponse: response.data });
 
-    // Envía la respuesta al usuario
-    reply = response.data.choices[0].message["content"];
-    chat.reply(reply);
-
     // Guardamos la respuesta.
-    conversations[conversationIndex].lastMessages.push({
-      role: "assistant",
-      content: reply,
+    const chatId = chat.message.chat.id;
+    let conversationIndex = conversations.findIndex((c) => c.id === chatId);
+
+    if (conversationIndex !== -1) {
+      conversations.splice(conversationIndex, 1);
+    }
+
+    conversations.push({
+      id: chatId,
+      lastMessages: [firstMessage, { role: "assistant", content: reply }],
+    });
+  };
+
+  // Mensaje que se muestra al iniciar el Chat
+  bot.start(async (chat) => {
+    await startBot(chat);
+  });
+
+  // Escuchamos las peticiones del usuario.
+  bot.on("message", async (chat) => {
+    let reply = "";
+
+    //Log del chat de telegram con el id, nombre y tipo de chat
+    console.log({
+      telegramMessageChat: chat.message.chat,
     });
 
-    // Si los mensajes guardados son mas de 20, eliminamos el primero.
-    if (conversations[conversationIndex].lastMessages.length > 20) {
-      conversations[conversationIndex].lastMessages.slice(1, 1);
-    }
-  } catch (e) {
-    console.log(e);
-    // Si hay un error comenzamos de vuelta el chat
-    chat.reply("Se ha producido un error. Reiniciando chat...");
-    console.log("Reiniciando chat...");
-    conversations[conversationIndex].lastMessages = [];
-    chat.reply(
-      "¡Hola! Soy ChatGPT, un modelo de inteligencia artificial basado en GPT-4. ¿Tienes alguna duda específica sobre la IA que te gustaría resolver, o preferirías realizar un breve test para ver cómo puedo ayudarte a generar contenido con la IA?"
-    );
-  }
-});
+    // Recuperamos el mensaje y el id del usuario.
+    let message = chat.message.text;
+    const chatId = chat.message.chat.id;
 
-// Inicia el bot
-bot.launch();
-console.log("bot iniciado");
+    let conversationIndex = conversations.findIndex((c) => c.id === chatId);
+
+    // Filtramos el mensaje '/start' que inicia el chat, si hay un chat guardado con ese id lo reiniciamos
+    if (message.toString().toLowerCase() === "/start") {
+      return;
+    }
+
+    // Guardamos el mensaje en el array para darle contexto al bot.
+    if (conversationIndex !== -1) {
+      conversations[conversationIndex].lastMessages.push({
+        role: "user",
+        content: message,
+      });
+    } else {
+      conversationIndex = conversations.length;
+      conversations.push({
+        id: chatId,
+        lastMessages: [firstMessage, { role: "user", content: message }],
+      });
+    }
+
+    // Generando el mensaje...
+    await chat.sendChatAction("typing");
+
+    try {
+      // Genera la respuesta usando la API de OpenAI
+      const response = await openai.createChatCompletion({
+        model,
+        messages: conversations[conversationIndex].lastMessages,
+      });
+
+      // Log de la response de chatgpt
+      console.log({ chatGptResponse: response.data });
+
+      // Envía la respuesta al usuario
+      reply = response.data.choices[0].message["content"];
+      chat.reply(reply);
+
+      // Guardamos la respuesta.
+      conversations[conversationIndex].lastMessages.push({
+        role: "assistant",
+        content: reply,
+      });
+
+      // Si los mensajes guardados son mas de 20, eliminamos el primero.
+      if (conversations[conversationIndex].lastMessages.length > 20) {
+        conversations[conversationIndex].lastMessages.slice(1, 1);
+      }
+    } catch (e) {
+      console.log(e);
+
+      // Si hay un error comenzamos de vuelta el chat
+      chat.reply("Se ha producido un error. Reiniciando chat...");
+      startBot(chat);
+    }
+  });
+
+  const stopBot = (botToken) => {
+    const botToStop = botsInitialized.find((bot) => bot.token === botToken);
+    botToStop.stop();
+  };
+
+  // Inicia el bot
+  bot.launch();
+  console.log("bot iniciado");
+};
+
+initializeBot(
+  openaiApi,
+  gepetoBot.API_TOKEN_TELEGRAM,
+  gepetoBot.prompt,
+  gepetoBot.openaiModel,
+);
+initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
+// initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
