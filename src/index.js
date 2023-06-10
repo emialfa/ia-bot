@@ -1,9 +1,12 @@
 const { Telegraf } = require("telegraf");
 require("dotenv").config();
+const mongodb = require('./config/mongoose.config');
 
 // APIs
 const openaiApi = require("./config/openai.config");
 const { gepetoBot, IAExpert } = require("./config/telegramBots.config");
+
+mongodb.init();
 
 const botsInitialized = [];
 
