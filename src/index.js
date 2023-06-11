@@ -188,5 +188,5 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
    gepetoBot.prompt,
    gepetoBot.openaiModel,
  );
-// initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
+initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
 // initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
