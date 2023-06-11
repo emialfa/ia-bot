@@ -1,5 +1,6 @@
 const { Telegraf } = require("telegraf");
 require("dotenv").config();
+require("./app")
 const mongodb = require('./config/mongoose.config');
 
 // APIs
@@ -142,11 +143,11 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
   console.log("bot iniciado");
 };
 
-initializeBot(
-  openaiApi,
-  gepetoBot.API_TOKEN_TELEGRAM,
-  gepetoBot.prompt,
-  gepetoBot.openaiModel,
-);
-initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
+// initializeBot(
+//   openaiApi,
+//   gepetoBot.API_TOKEN_TELEGRAM,
+//   gepetoBot.prompt,
+//   gepetoBot.openaiModel,
+// );
+// initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
 // initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
