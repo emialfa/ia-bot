@@ -1,6 +1,10 @@
 const Chat = require('../models/Chat.model');
 
-const getChats = async (query, page, items) => {
+const getChats = async (page, items, search) => {
+  const query = {};
+  if (search) {
+    query.firstName = { $regex: `${search || ''}`, $options: 'i' }
+  }
   const chats = await Chat.find(query)
     .skip((page - 1) * items)
     .limit(items);
