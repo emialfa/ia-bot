@@ -1,13 +1,31 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const Message = new Schema({
-    payload: String,
-    chat: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Chat',
-      },
-});
+const Message = new Schema(
+  {
+    data: String,
+    chatExternalId: String,
+    role: {
+      type: String,
+      enum: ["system", "assistant", "user"],
+    },
+    promptToken: {
+      type: Number,
+      default: 0,
+    },
+    tokens: {
+      type: Number,
+      default: 0,
+    },
+    totalTokens: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-module.exports = mongoose.model('Message', Message)
+module.exports = mongoose.model("Message", Message);

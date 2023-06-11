@@ -2,6 +2,8 @@ const { Telegraf } = require("telegraf");
 require("dotenv").config();
 require("./app")
 const mongodb = require('./config/mongoose.config');
+const chatInteractor = require('./interactors/chat.interactor');
+const messageInteractor = require('./interactors/message.interactor');
 
 // APIs
 const openaiApi = require("./config/openai.config");
@@ -56,6 +58,31 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
       id: chatId,
       lastMessages: [firstMessage, { role: "assistant", content: reply }],
     });
+
+    chatInteractor.createChat({
+      externalId: chatId,
+      firstName: chat.message.chat.first_name,
+      type: chat.message.chat.type,
+      model: response.data.model,
+    })
+
+    messageInteractor.createMessage({
+      chatExternalId: chatId,
+      data: 'Initializing chat...',
+      role: 'system',
+      promptToken: response.data.usage.prompt_tokens,
+      tokens: response.data.usage.prompt_tokens,
+      totalTokens: response.data.usage.prompt_tokens,
+    })
+
+    messageInteractor.createMessage({
+      chatExternalId: chatId,
+      data: reply,
+      role: 'assistant',
+      promptToken: response.data.usage.prompt_tokens,
+      tokens: response.data.usage.completion_tokens,
+      totalTokens: response.data.usage.total_tokens,
+    })
   };
 
   // Mensaje que se muestra al iniciar el Chat
@@ -97,6 +124,12 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
       });
     }
 
+    messageInteractor.createMessage({
+      chatExternalId: chatId,
+      data: message,
+      role: 'user',
+    })
+
     // Generando el mensaje...
     await chat.sendChatAction("typing");
 
@@ -119,6 +152,12 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
         role: "assistant",
         content: reply,
       });
+
+      messageInteractor.createMessage({
+        chatExternalId: chatId,
+        role: 'assistant',
+        data: reply,
+      })
 
       // Si los mensajes guardados son mas de 20, eliminamos el primero.
       if (conversations[conversationIndex].lastMessages.length > 20) {
@@ -143,11 +182,11 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
   console.log("bot iniciado");
 };
 
-// initializeBot(
-//   openaiApi,
-//   gepetoBot.API_TOKEN_TELEGRAM,
-//   gepetoBot.prompt,
-//   gepetoBot.openaiModel,
-// );
+ initializeBot(
+   openaiApi,
+   gepetoBot.API_TOKEN_TELEGRAM,
+   gepetoBot.prompt,
+   gepetoBot.openaiModel,
+ );
 // initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
 // initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
