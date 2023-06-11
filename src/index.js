@@ -66,7 +66,7 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
       model: response.data.model,
     })
 
-    messageInteractor.createMessage({
+    await messageInteractor.createMessage({
       chatExternalId: chatId,
       data: 'Initializing chat...',
       role: 'system',
@@ -75,7 +75,7 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
       totalTokens: response.data.usage.prompt_tokens,
     })
 
-    messageInteractor.createMessage({
+    await messageInteractor.createMessage({
       chatExternalId: chatId,
       data: reply,
       role: 'assistant',
@@ -124,12 +124,6 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
       });
     }
 
-    messageInteractor.createMessage({
-      chatExternalId: chatId,
-      data: message,
-      role: 'user',
-    })
-
     // Generando el mensaje...
     await chat.sendChatAction("typing");
 
@@ -153,16 +147,27 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
         content: reply,
       });
 
-      messageInteractor.createMessage({
-        chatExternalId: chatId,
-        role: 'assistant',
-        data: reply,
-      })
-
       // Si los mensajes guardados son mas de 20, eliminamos el primero.
       if (conversations[conversationIndex].lastMessages.length > 20) {
         conversations[conversationIndex].lastMessages.slice(1, 1);
       }
+
+      
+      await messageInteractor.createMessage({
+        chatExternalId: chatId,
+        data: message,
+        role: 'user',
+      })
+
+      await messageInteractor.createMessage({
+        chatExternalId: chatId,
+        role: 'assistant',
+        data: reply,
+        promptToken: response.data.usage.prompt_tokens,
+        tokens: response.data.usage.completion_tokens,
+        totalTokens: response.data.usage.total_tokens,
+      })
+
     } catch (e) {
       console.log(e);
 
