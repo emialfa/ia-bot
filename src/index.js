@@ -1,16 +1,6 @@
 const { Telegraf } = require("telegraf");
 require("dotenv").config();
-const express = require("express");
-
-const app = express();
-const port = process.env.PORT || 5000;
-
-app.listen(port, () => {
-  console.log("listening on port " + port);
-});
-
-app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+require("./app")
 
 // APIs
 const openaiApi = require("./config/openai.config");
@@ -150,11 +140,11 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
   console.log("bot iniciado");
 };
 
-initializeBot(
-  openaiApi,
-  gepetoBot.API_TOKEN_TELEGRAM,
-  gepetoBot.prompt,
-  gepetoBot.openaiModel,
-);
-initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
+// initializeBot(
+//   openaiApi,
+//   gepetoBot.API_TOKEN_TELEGRAM,
+//   gepetoBot.prompt,
+//   gepetoBot.openaiModel,
+// );
+// initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
 // initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
