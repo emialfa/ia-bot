@@ -10,6 +10,8 @@ const Chat = new Schema(
     },
     firstName: String,
     type: String,
+    model: String,
+    // bot: String,
   },
   {
     timestamps: true,
