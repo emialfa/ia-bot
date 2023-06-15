@@ -7,7 +7,7 @@ const messageInteractor = require('./interactors/message.interactor');
 
 // APIs
 const openaiApi = require("./config/openai.config");
-const { gepetoBot, IAExpert } = require("./config/telegramBots.config");
+const { gepetoBot, IAExpertBot, hairAdvisorBot, hairConsultantBot } = require("./config/telegramBots.config");
 
 mongodb.init();
 
@@ -193,5 +193,6 @@ const initializeBot = (openai, apiTokenTelegram, prompt, model) => {
    gepetoBot.prompt,
    gepetoBot.openaiModel,
  );
-initializeBot(openaiApi, IAExpert.API_TOKEN_TELEGRAM, IAExpert.prompt, IAExpert.openaiModel);
-// initializeBot(IAExpert.API_TOKEN_TELEGRAM, openaiAPi, IAExpert.prompt, 'text-davinci-003');
+initializeBot(openaiApi, IAExpertBot.API_TOKEN_TELEGRAM, IAExpertBot.prompt, IAExpertBot.openaiModel);
+initializeBot(openaiApi, hairAdvisorBot.API_TOKEN_TELEGRAM, hairAdvisorBot.prompt, hairAdvisorBot.openaiModel);
+initializeBot(openaiApi, hairConsultantBot.API_TOKEN_TELEGRAM, hairConsultantBot.prompt, hairConsultantBot.openaiModel);
