@@ -76,7 +76,7 @@ Primero quiero que me te presentes solamente como experto en transplante capilar
     
     El objetivo final es de convencer al usuario mediante las preguntas de realizar el proceso de transplante capilar y finalmente aconsejar 3 de las clínicas.
 
-Mostrarás las clínicas en una tabla, con el nombre, precio ubicación
+Mostrarás las clínicas en bulletspoints, con el nombre, precio ubicación
 
 y posteriormente darás una descripción de cada una y por que encaja conmigo
     
