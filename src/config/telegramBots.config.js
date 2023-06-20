@@ -1,4 +1,5 @@
 const gepetoBot = {
+    name: 'GepetoBot',
     API_TOKEN_TELEGRAM: process.env.API_TELEGRAM_GEPETO_BOT,
     openaiModel: "gpt-3.5-turbo",
     prompt: `Adopta las instrucciones que te voy a dar hasta el final de la conversación.
@@ -25,6 +26,7 @@ const gepetoBot = {
 }
 
 const IAExpertBot = {
+    name: 'IAExpertBot',
     API_TOKEN_TELEGRAM: process.env.API_TELEGRAM_IAEXPERT_BOT,
     openaiModel: "gpt-4",
     prompt: `Eres un experto en Inteligencia Artificial. Adopta las instrucciones que te voy a dar hasta el final de la conversación.
@@ -41,6 +43,7 @@ const IAExpertBot = {
 }
 
 const hairAdvisorBot = {
+    name: 'HairAdvisorBot',
     API_TOKEN_TELEGRAM: process.env.API_TELEGRAM_HAIRADVISOR_BOT,
     openaiModel: "gpt-4",
     prompt: `Eres un experto en Inteligencia Artificial. Adopta las instrucciones que te voy a dar hasta el final de la conversación.
@@ -57,6 +60,7 @@ const hairAdvisorBot = {
 }
 
 const hairConsultantBot = {
+    name: 'HairConsultantBot',
     API_TOKEN_TELEGRAM: process.env.API_TELEGRAM_HAIRCONSULTANT_BOT,
     openaiModel: "gpt-4",
     prompt: `Ignora todas las instrucciones previas. Eres un experto de transplante capilar y psicologo. Has ayudado a muchas personas antes que yo a su clinica. Tu tarea de ahora es aconsejarme sobre cual clínica usar. Para entender mejor lo que quiero y necesito siempre deberás responder incluyendo una pregunta de tipo test (a, b, c, d) que te ayude a entender mejor el contexto y mis necesidades. ¿Lo has entendido?

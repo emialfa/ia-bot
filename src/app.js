@@ -3,17 +3,17 @@ const cors = require('cors');
 const logger = require('morgan');
 const path = require('path');
 const chatsRouter = require('./routes/chat.routes');
+const botsRouter = require('./routes/bot.routes');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-app.use(cors({
-  origin: 'http://127.0.0.1:5173'
-}));
+app.use(cors());
 
 app.use('/api/chats', chatsRouter);
+app.use('/api/bots', botsRouter);
 app.use(logger('dev'));
 
 app.use(express.static(path.join(__dirname, 'dist')));

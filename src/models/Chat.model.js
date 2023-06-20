@@ -4,14 +4,12 @@ const Schema = mongoose.Schema;
 
 const Chat = new Schema(
   {
-    externalId: {
-      type: Number,
-      unique: true,
-    },
+    externalId: Number,
+    chatId: String,
     firstName: String,
     type: String,
     model: String,
-    // bot: String,
+    botName:String,
   },
   {
     timestamps: true,

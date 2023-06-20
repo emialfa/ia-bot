@@ -11,11 +11,12 @@ const getChats = async (req, res) => {
     }
   };
 
-  const getChatByExternalId = async (req, res) => {
+  const getChatByExternalIdAndBotName = async (req, res) => {
    try {
         if (!req.params.externalId) 
             return res.status(400).send({ message: req.t('content_not_empty') });
-        const chat = await chatInteractor.getChatByExternalId(req.params.externalId)
+        const botName = req.query.botName;
+        const chat = await chatInteractor.getChatByExternalIdAndBotName(req.params.externalId, botName.length ? botName : undefined)
         res.send(chat);
           
     } catch (err) {
@@ -24,4 +25,4 @@ const getChats = async (req, res) => {
 
   };
 
-module.exports = { getChats, getChatByExternalId };
+module.exports = { getChats, getChatByExternalIdAndBotName };

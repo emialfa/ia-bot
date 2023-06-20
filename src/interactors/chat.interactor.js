@@ -5,19 +5,19 @@ const { formatResponse } = require('../utils/formatResponse.js');
 
 const getChats = async (page, items, search) => {
     try {
-      const { chats, count } = await chatRepository.getChats(page, items, search);
+      const { chats, count } = await chatRepository.getChatsWithTotalTokens(page, items, search);
       return formatResponse(chats, count);
     } catch (err) {
       throw { message: err, status: 400, description: err.message };
     }
   };
 
-  const getChatByExternalId = async (externalId) => {
+  const getChatByExternalIdAndBotName = async (externalId, botName) => {
     try {
-      const chat = await chatRepository.getChatByExternalId(externalId);
+      const chat = await chatRepository.getChatByExternalIdAndBotName(externalId, botName);
       if (!chat) 
         throw `Chat no exist`;
-      const messages = await messageRepository.getMessages({chatExternalId: externalId})
+      const messages = await messageRepository.getMessages({ chatExternalId: externalId, botName });
       return {...chat._doc, messages };
     } catch (err) {
       throw { message: err, status: 400, description: err.message };
@@ -26,7 +26,7 @@ const getChats = async (page, items, search) => {
 
 const createChat = async (chat) => {
     try {
-        const chatFounded = await chatRepository.getChatByExternalId(chat.externalId);
+        const chatFounded = await chatRepository.getChatByExternalIdAndBotName(chat.externalId, chat.botName);
         if (chatFounded) return;
 
         return await chatRepository.createChat(chat);
@@ -35,4 +35,4 @@ const createChat = async (chat) => {
     }
 }
 
-module.exports = { getChats, getChatByExternalId, createChat };
+module.exports = { getChats, getChatByExternalIdAndBotName, createChat };

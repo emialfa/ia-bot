@@ -6,6 +6,7 @@ const Message = new Schema(
   {
     data: String,
     chatExternalId: String,
+    botName: String,
     role: {
       type: String,
       enum: ["system", "assistant", "user"],
