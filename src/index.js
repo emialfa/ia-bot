@@ -9,6 +9,7 @@ mongodb.init();
 const initializeBots = async () => {
   const bots = await botInteractor.getBots();
   for (const bot of bots.values) {
+    if (bot.telegramToken)
     telegramInteractor.initializeBot(bot.telegramToken, bot.prompt, bot.model, bot.name);
   }
 }
