@@ -8,6 +8,10 @@ const Bot = new Schema(
     telegramToken: String,
     model: String,
     prompt: String,
+    url: String,
+    temperature: Number,
+    type: String,
+    maxMessageCount: Number,
   },
   {
     timestamps: true,

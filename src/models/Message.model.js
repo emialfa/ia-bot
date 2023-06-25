@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const Message = new Schema(
   {
     data: String,
+    chatId: String,
     chatExternalId: String,
     botName: String,
     role: {

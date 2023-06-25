@@ -31,34 +31,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-const usersConnected = [];
-
-io.on("connection", (socket) => {
-  console.log('New client connected:', socket.id);
-  usersConnected.push({userId:socket.id, lastMessages: []});
-  console.log({usersConnected})
-  socket.on("message", (body) => {
-    socket.emit("message received", {
-      body,
-    });
-    socket.emit("message", {
-      body: "probando",
-    });
-    
-    const userIndex = usersConnected.findIndex(user => user.userId === socket.id);
-    usersConnected[userIndex].lastMessages.push(body);
-    console.log({usersConnected})
-  });
-
-  socket.on("disconnect", () => {
-    console.log('Client disconnected:', socket.id);
-    const userIndex = usersConnected.findIndex(user => user.userId === socket.id);
-    usersConnected.splice(userIndex, 1);
-  })
-});
-
 server.listen(port, () => {
   console.log("listening on port " + port);
 });
 
-module.exports = app;
+module.exports = { app, io };

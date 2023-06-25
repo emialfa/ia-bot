@@ -24,6 +24,19 @@ const getBots = async (req, res) => {
 
   };
 
+  const createBot = async (req, res) => {
+    try {
+         if (!req.body) 
+             return res.status(400).send({ message: req.t('content_not_empty') });
+         const bot = await botInteractor.createBot(req.body)
+         res.send(bot);
+           
+     } catch (err) {
+         handleControllersErrors(req, res, err, 'Bot can not be found');
+       };
+ 
+   };
+
   const updateBotById = async (req, res) => {
     try {
          if (!req.params.id || !req.body) 
@@ -34,7 +47,20 @@ const getBots = async (req, res) => {
      } catch (err) {
          handleControllersErrors(req, res, err, 'Bot can not be found');
        };
- 
    };
 
-module.exports = { getBots, getBotById, updateBotById };
+   const deleteBot = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      if (!id) {
+        throw { message: 'content_not_empty', status: 400, description: 'Error: Param ID empty' };
+      }
+      const bot = await botInteractor.deleteBot(id);
+      res.send(bot);
+    } catch (e) {
+      handleControllersErrors(req, res, e, 'colors_error_delete');
+    }
+   }
+
+module.exports = { getBots, getBotById, createBot, updateBotById, deleteBot };

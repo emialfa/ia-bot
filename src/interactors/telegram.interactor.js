@@ -7,7 +7,7 @@ const openai = require("../config/openai.config");
 
 const botsInitialized = [];
 
-const initializeBot = (apiTokenTelegram, prompt, model, botName) => {
+const initializeBot = (apiTokenTelegram, prompt, model, temperature, maxMessageCount, botName) => {
     // Iniciamos Bot de Telegram
     const bot = new Telegraf(apiTokenTelegram);
     botsInitialized.push(bot);
@@ -30,8 +30,10 @@ const initializeBot = (apiTokenTelegram, prompt, model, botName) => {
         telegramMessageChat: chat.message.chat,
       });
   
-      const response = await openaiService.generateMessage(openai, model, [firstMessage])
-  
+      const response = await openaiService.generateMessage(openai, model, temperature, [firstMessage])
+      
+      if (!response) throw new Error("Failed to generate message with openai service");
+      
       reply = response.data.choices[0].message["content"];
       chat.reply(reply);
   
@@ -132,8 +134,10 @@ const initializeBot = (apiTokenTelegram, prompt, model, botName) => {
   
       try {
         // Genera la respuesta usando la API de OpenAI
-        const response = await openaiService.generateMessage(openai, model, conversations[conversationIndex].lastMessages)
-  
+        const response = await openaiService.generateMessage(openai, model, temperature, conversations[conversationIndex].lastMessages)
+        
+        if (!response) throw new Error("Failed to generate message with openai service");
+
         // Log de la response de chatgpt
         console.log({ chatGptResponse: response.data });
   
@@ -148,7 +152,7 @@ const initializeBot = (apiTokenTelegram, prompt, model, botName) => {
         });
   
         // Si los mensajes guardados son mas de 20, eliminamos el primero.
-        if (conversations[conversationIndex].lastMessages.length > 20) {
+        if (conversations[conversationIndex].lastMessages.length > (maxMessageCount || 20)) {
           conversations[conversationIndex].lastMessages.slice(1, 1);
         }
   

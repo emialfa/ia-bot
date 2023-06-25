@@ -1,4 +1,4 @@
-const generateMessage = async (openai, model, messages) => {
+const generateMessage = async (openai, model, temperature, messages) => {
   let retries = 0;
   const maxRetries = 5;
 
@@ -7,6 +7,7 @@ const generateMessage = async (openai, model, messages) => {
       const response = await openai.createChatCompletion({
         model,
         messages,
+        temperature: typeof temperature === 'number' ? temperature : 0.3,
       });
       return response;
     } catch (err) {

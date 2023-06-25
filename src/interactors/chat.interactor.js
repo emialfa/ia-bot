@@ -12,12 +12,12 @@ const getChats = async (page, items, search) => {
     }
   };
 
-  const getChatByExternalIdAndBotName = async (externalId, botName) => {
+  const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
     try {
-      const chat = await chatRepository.getChatByExternalIdAndBotName(externalId, botName);
+      const chat = await chatRepository.getChatByExternalIdAndBotName(chatId ? {chatId} : {externalId}, botName);
       if (!chat) 
         throw `Chat no exist`;
-      const messages = await messageRepository.getMessages({ chatExternalId: externalId, botName });
+      const messages = await messageRepository.getMessages({ ...(chatId ? {chatId: chatId} : {chatExternalId: externalId}), botName });
       return {...chat._doc, messages };
     } catch (err) {
       throw { message: err, status: 400, description: err.message };
@@ -26,7 +26,8 @@ const getChats = async (page, items, search) => {
 
 const createChat = async (chat) => {
     try {
-        const chatFounded = await chatRepository.getChatByExternalIdAndBotName(chat.externalId, chat.botName);
+        const {externalId, chatId} = chat;
+        const chatFounded = await chatRepository.getChatByExternalIdAndBotName(externalId ? {externalId} : {chatId}, chat.botName);
         if (chatFounded) return;
 
         return await chatRepository.createChat(chat);
