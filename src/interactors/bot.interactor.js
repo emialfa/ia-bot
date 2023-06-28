@@ -42,7 +42,7 @@ const updateBotById = async (botId, bot) => {
     if (!botFounded) throw `Bot no exist`;
     
     
-    if (botFounded.chatExternalId?.length) {
+    if (botFounded.telegramToken?.length) {
       await telegramInteractor.stopBot(botFounded.telegramToken);
       telegramInteractor.initializeBot(
         bot.telegramToken || botFounded.telegramToken,
