@@ -10,6 +10,10 @@ const Chat = new Schema(
     type: String,
     model: String,
     botName:String,
+    userQuestionary: {
+      type: Schema.Types.ObjectId,
+      ref: "UserQuestionary",
+    }
   },
   {
     timestamps: true,

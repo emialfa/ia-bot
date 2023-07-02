@@ -1,0 +1,89 @@
+<svg id="a-loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+	<g id="ring">
+		<circle cx="250" cy="250" r="192.8" fill="none" stroke="#1c3553" stroke-miterlimit="10" stroke-width="28.35"/>
+		<path d="M250,57.2a192.8,192.8,0,0,1,0,385.6" fill="none" stroke="#41a6df" stroke-miterlimit="10" stroke-width="28.35"/>
+	</g>
+	<g id="icon-a">
+		<path d="M344.8,225.41V349.62H297.73V330a90.31,90.31,0,0,1-27.52,18.78,77.2,77.2,0,0,1-29.95,5.75,85.44,85.44,0,0,1-14.14-1.11c-17.35-2.87-32.93-11.16-46.52-24.86l-2-2.1c-17.68-18.79-26.41-42-26.41-69.84q0-43.26,25.53-71c1-1,1.87-2,2.87-3a85.1,85.1,0,0,1,24.53-17.35,75.94,75.94,0,0,1,22-6.41,98.73,98.73,0,0,1,12.71-.89h48.73a66.74,66.74,0,0,0,38.79-12.37c0,.33-.11.66-.11,1h0a63.83,63.83,0,0,1-33,46.86c-.78.44-1.66.77-2.44,1.21l-2.1,1-2,.88a66.29,66.29,0,0,1-19,4.53,23.32,23.32,0,0,0-2.76.22,19.57,19.57,0,0,1-2.54,0H248.44a51.17,51.17,0,0,0-18.67,3.32,48.05,48.05,0,0,0-17.57,12C202.58,226.85,197.83,240,197.83,256s4.86,29.39,14.59,40A50,50,0,0,0,226,306.41a48.07,48.07,0,0,0,22.43,5.19,49,49,0,0,0,36.69-15.36,52.14,52.14,0,0,0,13.59-28.62,69.89,69.89,0,0,0,.88-11.71A59.9,59.9,0,0,0,292.86,227c0-.11,0-.22-.11-.22a48.76,48.76,0,0,0-2.54-4.2c0-.11-.11-.11-.11-.22a42.08,42.08,0,0,0-5-6l-.22-.22A67.57,67.57,0,0,0,327,186.4l1.66,1.66C337.84,197,343.14,209.5,344.8,225.41Z" fill="#1c3553"/>
+		<path id="light-blue-a" d="M344.8,225.41V349.62H297.73V330a90.31,90.31,0,0,1-27.52,18.78,77.2,77.2,0,0,1-29.95,5.75,85.44,85.44,0,0,1-14.14-1.11c-17.35-2.87-32.93-11.16-46.52-24.86l-2-2.1c-17.68-18.79-26.41-42-26.41-69.84q0-43.26,25.53-71c1-1,1.87-2,2.87-3a85.1,85.1,0,0,1,24.53-17.35,75.94,75.94,0,0,1,22-6.41,98.73,98.73,0,0,1,12.71-.89h48.73a66.74,66.74,0,0,0,38.79-12.37c0,.33-.11.66-.11,1h0a63.83,63.83,0,0,1-33,46.86c-.78.44-1.66.77-2.44,1.21l-2.1,1-2,.88a66.29,66.29,0,0,1-19,4.53,23.32,23.32,0,0,0-2.76.22,19.57,19.57,0,0,1-2.54,0H248.44a51.17,51.17,0,0,0-18.67,3.32,48.05,48.05,0,0,0-17.57,12C202.58,226.85,197.83,240,197.83,256s4.86,29.39,14.59,40A50,50,0,0,0,226,306.41a48.07,48.07,0,0,0,22.43,5.19,49,49,0,0,0,36.69-15.36,52.14,52.14,0,0,0,13.59-28.62,69.89,69.89,0,0,0,.88-11.71A59.9,59.9,0,0,0,292.86,227c0-.11,0-.22-.11-.22a48.76,48.76,0,0,0-2.54-4.2c0-.11-.11-.11-.11-.22a42.08,42.08,0,0,0-5-6l-.22-.22A67.57,67.57,0,0,0,327,186.4l1.66,1.66C337.84,197,343.14,209.5,344.8,225.41Z" fill="#41a6df"/>
+	</g>
+	<style>
+		#a-loader #ring {
+			-webkit-transform-origin: 250px 250px;
+			    -ms-transform-origin: 250px 250px;
+			        transform-origin: 250px 250px;
+			-webkit-transform: rotate(-360deg);
+			    -ms-transform: rotate(-360deg);
+			        transform: rotate(-360deg);
+			-webkit-animation: rotateIn 1s linear 0s infinite;
+			        animation: rotateIn 1s linear 0s infinite;
+		}
+
+		#a-loader #icon-a {
+			-webkit-transform-origin: 250px 250px;
+			    -ms-transform-origin: 250px 250px;
+			        transform-origin: 250px 250px;
+			-webkit-animation: scaleA 0.8s ease-in 0s infinite alternate;
+			        animation: scaleA 0.8s ease-in 0s infinite alternate;
+		}
+
+		#a-loader #light-blue-a {
+			-webkit-animation: fadeOutA 0.8s ease-out 0s infinite alternate;
+			        animation: fadeOutA 0.8s ease-out 0s infinite alternate;
+		}
+
+		@-webkit-keyframes rotateIn {
+			to {
+				-webkit-transform: rotate(0deg);
+				        transform: rotate(0deg);
+			}
+		}
+
+		@keyframes rotateIn {
+			to {
+				-webkit-transform: rotate(0deg);
+				        transform: rotate(0deg);
+			}
+		}
+
+		@-webkit-keyframes scaleA {
+			0%, 70% {
+				-webkit-transform: scale(1, 1);
+				        transform: scale(1, 1);
+			}
+			100% {
+				-webkit-transform: scale(1.05, 1.05);
+				        transform: scale(1.05, 1.05);
+			}
+		}
+
+		@keyframes scaleA {
+			0%, 70% {
+				-webkit-transform: scale(1, 1);
+				        transform: scale(1, 1);
+			}
+			100% {
+				-webkit-transform: scale(1.05, 1.05);
+				        transform: scale(1.05, 1.05);
+			}
+		}
+
+		@-webkit-keyframes fadeOutA {
+			0%, 70% {
+				opacity: 1;
+			}
+			100% {
+				opacity: 0;
+			}
+		}
+
+		@keyframes fadeOutA {
+			0%, 70% {
+				opacity: 1;
+			}
+			100% {
+				opacity: 0;
+			}
+		}
+	</style>
+</svg>
