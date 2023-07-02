@@ -4,7 +4,7 @@ const mongodb = require("./config/mongoose.config");
 const telegramInteractor = require("./interactors/telegram.interactor");
 const botInteractor = require("./interactors/bot.interactor");
 const { initializeIO, setBots } = require("./io");
-const { gepetoBot } = require("./config/telegramBots.config")
+// const { gepetoBot } = require("./config/telegramBots.config")
 
 mongodb.init();
 
@@ -14,26 +14,26 @@ const initializeTelegramBots = async () => {
   const bots = await botInteractor.getBots();
   for (const bot of bots.values) {
     if (bot.telegramToken) {
-      // telegramInteractor.initializeBot(
-      //   bot.telegramToken,
-      //   bot.prompt,
-      //   bot.model,
-      //   bot.temperature,
-      //   bot.maxMessageCount,
-      //   bot.name
-      // );
+      telegramInteractor.initializeBot(
+        bot.telegramToken,
+        bot.prompt,
+        bot.model,
+        bot.temperature,
+        bot.maxMessageCount,
+        bot.name
+      );
     } else {
       botsWeb.push(bot);
     }
   }
-   telegramInteractor.initializeBot(
-      gepetoBot.API_TOKEN_TELEGRAM,
-      gepetoBot.prompt,
-      gepetoBot.openaiModel,
-      gepetoBot.temperature,
-      gepetoBot.maxMessageCount,
-      gepetoBot.name
-    );
+  //  telegramInteractor.initializeBot(
+  //     gepetoBot.API_TOKEN_TELEGRAM,
+  //     gepetoBot.prompt,
+  //     gepetoBot.openaiModel,
+  //     gepetoBot.temperature,
+  //     gepetoBot.maxMessageCount,
+  //     gepetoBot.name
+  //   );
 };
 
 const init = async () => {
