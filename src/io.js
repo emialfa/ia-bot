@@ -79,7 +79,6 @@ const initializeIO = async (io) => {
     });
 
     socket.on("questionary response", (questionaryResponse) => {
-      console.log({ questionaryResponse });
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
       );
