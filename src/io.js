@@ -15,9 +15,10 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       if (!userQuestionary || bot.type !== 'webform') throw new Error;
 
       userQuestionary.questions.forEach(q => {
-        bot.prompt.replace(q.question.slug, q.optionValue || q.question.options.find(o => o.key === q.optionKey).label)
+        bot.prompt = bot.prompt.replace(q.question.slug, q.optionValue || q.question.options.find(o => o.key === q.optionKey).label)
       })
     }
+
     const firstSystemMessage = {
       role: "system",
       content: bot.prompt,
@@ -87,8 +88,13 @@ const initializeIO = async (io) => {
         "questionary response received"
       );
       if (questionaryIndex !== -1) {
-        questionaries[questionaryIndex].questions.push(questionaryResponse);
-      }
+        const questionaryQuestionIndex = questionaries[questionaryIndex].questions.findIndex(q => q.question === questionaryResponse.question)
+        if (questionaryQuestionIndex !== -1) {
+          questionaries[questionaryIndex].questions[questionaryQuestionIndex] = questionaryResponse;
+        } else {
+          questionaries[questionaryIndex].questions.push(questionaryResponse);
+        }
+      } 
     });
 
     socket.on("questionary finished", async () => {
