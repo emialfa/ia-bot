@@ -17,6 +17,8 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       userQuestionary.questions.forEach(q => {
         bot.prompt = bot.prompt.replace(q.question.slug, q.optionValue || q.question.options.find(o => o.key === q.optionKey).label)
       })
+
+      console.log('Prompt generated with questionary answers:', bot.prompt)
     }
 
     const firstSystemMessage = {
