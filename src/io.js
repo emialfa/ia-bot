@@ -15,6 +15,10 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       if (!userQuestionary || bot.type !== 'webform') throw new Error;
 
       userQuestionary.questions.forEach(q => {
+        console.log('slug:', q.question.slug)
+        console.log('optionValue:', q.optionValue)
+        console.log('option label:', q.question.options.find(o => o.key === q.optionKey).label)
+
         bot.prompt = bot.prompt.replace(q.question.slug, q.optionValue || q.question.options.find(o => o.key === q.optionKey).label)
       })
 
@@ -35,6 +39,8 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       throw new Error("Failed to generate message with openai service");
     const reply = firstResponse.data.choices[0].message["content"];
     const firstAssistantMessage = { role: "assistant", content: reply };
+    if (userQuestionary && bot.type === 'webform') console.log('Response generated with questionary answers:', reply);
+
     return {
       firstSystemMessage,
       firstAssistantMessage,
