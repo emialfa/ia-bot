@@ -39,7 +39,7 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       throw new Error("Failed to generate message with openai service");
     const reply = firstResponse.data.choices[0].message["content"];
     const firstAssistantMessage = { role: "assistant", content: reply };
-    if (userQuestionary && bot.type === 'webform') console.log('Response generated with questionary answers:', reply);
+    if (userId && bot.type === 'webform') console.log('Response generated with questionary answers:', reply);
 
     return {
       firstSystemMessage,
