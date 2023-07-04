@@ -7,27 +7,30 @@ const openai = require("./config/openai.config");
 const chatInteractor = require("./interactors/chat.interactor");
 const messageInteractor = require("./interactors/message.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
+const { cloneObject } = require("./utils/functions");
 
 const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
   try {
+    const botCloned = cloneObject(bot)
     if (userId) {
       const userQuestionary = await userQuestionaryInteractor.getUserQuestionary(userId);
       if (!userQuestionary || bot.type !== 'webform') throw new Error;
 
+
       userQuestionary.questions.forEach(q => {
         console.log('slug:', q.question.slug)
-        console.log('optionValue:', q.optionValue)
-        console.log('option label:', q.question.options.find(o => o.key === q.optionKey).label)
+        console.log('optionSelected:', q.optionValue || q.question.options.find(o => o.key === q.optionKey)?.label)
 
-        bot.prompt = bot.prompt.replace(q.question.slug, q.optionValue || q.question.options.find(o => o.key === q.optionKey).label)
+        const optionLabel = q.question.options.find(o => o.key === q.optionKey)?.label;
+        botCloned.prompt = botCloned.prompt.replace(q.question.slug, q.question.slug === 'residential_zone' ? `${q.optionValue ? q.optionValue+', ' : ''}${optionLabel}` : (q.optionValue || optionLabel))
       })
 
-      console.log('Prompt generated with questionary answers:', bot.prompt)
+      console.log('Prompt generated with questionary answers:', botCloned.prompt)
     }
 
     const firstSystemMessage = {
       role: "system",
-      content: bot.prompt,
+      content: botCloned.prompt,
     };
     const firstResponse = await openaiService.generateMessage(
       openai,
