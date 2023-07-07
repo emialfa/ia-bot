@@ -6,11 +6,13 @@ const openaiService = require("./services/openai.service");
 const openai = require("./config/openai.config");
 const chatInteractor = require("./interactors/chat.interactor");
 const messageInteractor = require("./interactors/message.interactor");
+const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
 const { cloneObject } = require("./utils/functions");
 
 const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
   try {
+    console.log({bot})
     const botCloned = cloneObject(bot)
     if (userId) {
       const userQuestionary = await userQuestionaryInteractor.getUserQuestionary(userId);
@@ -80,11 +82,14 @@ const initializeIO = async (io) => {
 
     // ********* questionary events *********
 
-    socket.on("questionary", (phoneNumber) => {
+    socket.on("questionary", async (phoneNumber, questionaryId) => {
+      // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
+      // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       questionaries.push({
         userId: socket.id,
         phoneNumber: phoneNumber || "",
         questions: [],
+        questionary: questionaryId,
       });
 
       socket.emit("server socket id", socket.id);
@@ -114,11 +119,12 @@ const initializeIO = async (io) => {
         (q) => q.userId === socket.id
       );
       if (questionaryIndex !== -1) {
-        await userQuestionaryInteractor.createUserQuestionary(questionaries[questionaryIndex])
+        const questionaryCreated = await userQuestionaryInteractor.createUserQuestionary(questionaries[questionaryIndex]);
+        if (!questionaryCreated) return socket.emit("questionary not saved", socket.id);
         questionaries.splice(questionaryIndex, 1);
         socket.emit(
           "questionary saved",
-          "questionary saved"
+          questionaryCreated.questionary.bot.name,
         );
       }
     })

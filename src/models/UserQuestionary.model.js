@@ -6,7 +6,10 @@ const UserQuestionary = new Schema(
   {
     userId: String,
     phoneNumber: String,
-    questionaryId: String,
+    questionary: {
+      type: Schema.Types.ObjectId,
+      ref: "Questionary",
+    },
     questions: [
       {
         question: {

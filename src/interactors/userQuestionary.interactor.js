@@ -1,4 +1,5 @@
 const userQuestionaryRepository = require('../repositories/userQuestionary.repository')
+const questionaryRepository = require('../repositories/questionary.repository')
 
 const getUserQuestionary = async (userId) => {
     try {
@@ -14,6 +15,8 @@ const getUserQuestionary = async (userId) => {
   
 const createUserQuestionary = async (userQuestionary) => {
     try {
+        if (!userQuestionary.questionary) userQuestionary.questionary = (await questionaryRepository.getFirstQuestionary())?._id;
+        if (!userQuestionary.questionary)  throw `No questionary founded`;
         return await userQuestionaryRepository.createUserQuestionary(userQuestionary);
     } catch (err) {
         console.log(err);
