@@ -1,4 +1,4 @@
-const Questionary = require("../models/questionary.model");
+const Questionary = require("../models/Questionary.model");
 
 const getQuestionaryById = async (id) => {
   return await Questionary.findById(id).populate([
