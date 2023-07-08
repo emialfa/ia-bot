@@ -14,14 +14,15 @@ const initializeTelegramBots = async () => {
   const bots = await botInteractor.getBots();
   for (const bot of bots.values) {
     if (bot.telegramToken) {
-      telegramInteractor.initializeBot(
-        bot.telegramToken,
-        bot.prompt,
-        bot.model,
-        bot.temperature,
-        bot.maxMessageCount,
-        bot.name
-      );
+      if (process.env.NODE_ENV === "production")
+        telegramInteractor.initializeBot(
+          bot.telegramToken,
+          bot.prompt,
+          bot.model,
+          bot.temperature,
+          bot.maxMessageCount,
+          bot.name
+        );
     } else {
       botsWeb.push(bot);
     }
