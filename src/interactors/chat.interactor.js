@@ -1,38 +1,78 @@
-const chatRepository = require('../repositories/chat.repository')
-const messageRepository = require('../repositories/message.repository')
+const chatRepository = require("../repositories/chat.repository");
+const messageRepository = require("../repositories/message.repository");
+const userQuestionaryRepository = require('../repositories/userQuestionary.repository')
 
-const { formatResponse } = require('../utils/formatResponse.js');
+const { formatResponse } = require("../utils/formatResponse.js");
 
 const getChats = async (page, items, search) => {
-    try {
-      const { chats, count } = await chatRepository.getChats(page, items, search);
-      return formatResponse(chats, count);
-    } catch (err) {
-      throw { message: err, status: 400, description: err.message };
-    }
-  };
+  try {
+    const { chats, count } = await chatRepository.getChatsWithTotalTokens(
+      page,
+      items,
+      search
+    );
+    return formatResponse(chats, count);
+  } catch (err) {
+    throw { message: err, status: 400, description: err.message };
+  }
+};
 
-  const getChatByExternalId = async (externalId) => {
-    try {
-      const chat = await chatRepository.getChatByExternalId(externalId);
-      if (!chat) 
-        throw `Chat no exist`;
-      const messages = await messageRepository.getMessages({chatExternalId: externalId})
-      return {...chat._doc, messages };
-    } catch (err) {
-      throw { message: err, status: 400, description: err.message };
-    }
-  };
+const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
+  try {
+    const chat = await chatRepository.getChatByExternalIdAndBotName(
+      chatId ? { chatId } : { externalId },
+      botName
+    );
+    if (!chat) throw `Chat no exist`;
+    let questionaryMessages = [];
+    if (chat.userQuestionary)   
+      questionaryMessages = chat.userQuestionary.questions.flatMap(q => {
+        const questionOptionSelected =  q.question?.options?.find(o => o.key === q.optionKey);
+        return [{
+        role: "assistant",
+        data: q.question?.label || '',
+        createdAt: chat.userQuestionary.createdAt,
+        tokens: 0,
+        totalTokens: 0,
+      }, {
+        role: "user",
+        data: questionOptionSelected?.type !== "INPUT" ? questionOptionSelected?.label || '' : q.optionValue,
+        createdAt: chat.userQuestionary.createdAt,
+        tokens: 0,
+        totalTokens: 0,
+      }
+    ]})
 
-const createChat = async (chat) => {
-    try {
-        const chatFounded = await chatRepository.getChatByExternalId(chat.externalId);
-        if (chatFounded) return;
+    const messages = await messageRepository.getMessages({
+      ...(chatId ? { chatId: chatId } : { chatExternalId: externalId }),
+      botName,
+    });
+    
+    return { ...chat._doc, messages: {...messages, messages: [...questionaryMessages, ...messages.messages] }};
+  } catch (err) {
+    throw { message: err, status: 400, description: err.message };
+  }
+};
 
-        return await chatRepository.createChat(chat);
-    } catch (err) {
-        console.log(err);
-    }
-}
+const createChat = async (chat, userId) => {
+  try {
+    const { externalId, chatId } = chat;
+    let userQuestionary;
+    const chatFounded = await chatRepository.getChatByExternalIdAndBotName(
+      externalId ? { externalId } : { chatId },
+      chat.botName
+    );
+    if (chatFounded) return;
 
-module.exports = { getChats, getChatByExternalId, createChat };
+    if (userId) userQuestionary = await userQuestionaryRepository.getUserQuestionary({userId});
+
+    return await chatRepository.createChat({
+      ...chat,
+      ...(userQuestionary ? { userQuestionary: userQuestionary._id.toString() } : {}),
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { getChats, getChatByExternalIdAndBotName, createChat };

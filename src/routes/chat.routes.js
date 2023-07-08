@@ -3,7 +3,7 @@ const chatController = require('../controllers/chat.controller');
 
 const router = express.Router();
 
-router.get('/:externalId',  chatController.getChatByExternalId);
+router.get('/:externalId',  chatController.getChatByExternalIdAndBotName);
 
 router.get('/', chatController.getChats);
 
