@@ -27,6 +27,7 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
         botCloned.prompt = botCloned.prompt.replace(q.question.slug, q.question.slug === 'residential_zone' ? `${q.optionValue ? q.optionValue+', ' : ''}${optionLabel}` : (q.optionValue || optionLabel))
       })
 
+      botCloned.prompt += ` Todo esto en el idioma ${userQuestionary.languageLocale === 'en' ? 'ingles' : 'español'}.`;
       console.log('Prompt generated with questionary answers:', botCloned.prompt)
     }
 
@@ -113,11 +114,12 @@ const initializeIO = async (io) => {
       } 
     });
 
-    socket.on("questionary finished", async () => {
+    socket.on("questionary finished", async (language) => {
       console.log(`questionary of user "${socket.id}" finished`);
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
       );
+      questionaries[questionaryIndex].languageLocale = language || "es";
       if (questionaryIndex !== -1) {
         const questionaryCreated = await userQuestionaryInteractor.createUserQuestionary(questionaries[questionaryIndex]);
         if (!questionaryCreated) return socket.emit("questionary not saved", socket.id);

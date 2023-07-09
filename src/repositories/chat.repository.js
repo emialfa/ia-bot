@@ -20,7 +20,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
   if (search) {
     query.firstName = { $regex: `${search || ""}`, $options: "i" };
   }
-  const chats = await Chat.find(query)
+  const chats = await Chat.find(query).populate(['userQuestionary'])
     .skip((page - 1) * items)
     .limit(items)
     .sort({ createdAt: "desc" });
@@ -63,7 +63,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
           : _id.chatId === chatId.toString()) && _id.botName === botName
     );
     const totalTokens = result ? result.totalTokens : 0;
-    return { ...chat.toObject(), totalTokens };
+    return { ...chat.toObject(), totalTokens,  languageLocale: chat?.userQuestionary?.languageLocale || 'es'};
   });
 
   return { chats: chatsWithTotalTokens, count };
