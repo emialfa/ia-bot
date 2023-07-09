@@ -9,6 +9,7 @@ const messageInteractor = require("./interactors/message.interactor");
 const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
 const { cloneObject } = require("./utils/functions");
+const languages = require("./utils/languages");
 
 const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
   try {
@@ -27,7 +28,7 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
         botCloned.prompt = botCloned.prompt.replace(q.question.slug, q.question.slug === 'residential_zone' ? `${q.optionValue ? q.optionValue+', ' : ''}${optionLabel}` : (q.optionValue || optionLabel))
       })
 
-      botCloned.prompt += ` Todo esto en el idioma ${userQuestionary.languageLocale === 'en' ? 'ingles' : 'español'}.`;
+      botCloned.prompt += ` Todo esto en el idioma ${languages[userQuestionary.languageLocale || 'es']}.`;
       console.log('Prompt generated with questionary answers:', botCloned.prompt)
     }
 
