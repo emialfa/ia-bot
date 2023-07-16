@@ -11,7 +11,8 @@ const getChats = async (page, items, search) => {
       items,
       search
     );
-    return formatResponse(chats, count);
+    const chatsToResponse = chats.map(c => ({...c, totalMessages: (c.userQuestionary?.questions?.length || 0) * 2 + c.totalMessages}))
+    return formatResponse(chatsToResponse, count);
   } catch (err) {
     throw { message: err, status: 400, description: err.message };
   }

@@ -12,9 +12,9 @@ const server = http.createServer(app);
 const port = process.env.PORT || 5000;
 
 const io = new SocketServer(server, {
-   cors: {
+   cors: process.env.NODE_ENV === "development" ? {
      origin: "http://127.0.0.1:5173",
-   },
+   } : {},
 });
 
 app.use(express.json());

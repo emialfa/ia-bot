@@ -13,23 +13,39 @@ const languages = require("./utils/languages");
 
 const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
   try {
-    console.log({bot})
-    const botCloned = cloneObject(bot)
+    console.log({ bot });
+    const botCloned = cloneObject(bot);
     if (userId) {
-      const userQuestionary = await userQuestionaryInteractor.getUserQuestionary(userId);
-      if (!userQuestionary || bot.type !== 'webform') throw new Error;
+      const userQuestionary =
+        await userQuestionaryInteractor.getUserQuestionary(userId);
+      if (!userQuestionary || bot.type !== "webform") throw new Error();
 
+      userQuestionary.questions.forEach((q) => {
+        console.log("slug:", q.question.slug);
+        console.log(
+          "optionSelected:",
+          q.optionValue ||
+            q.question.options.find((o) => o.key === q.optionKey)?.label
+        );
 
-      userQuestionary.questions.forEach(q => {
-        console.log('slug:', q.question.slug)
-        console.log('optionSelected:', q.optionValue || q.question.options.find(o => o.key === q.optionKey)?.label)
+        const optionLabel = q.question.options.find(
+          (o) => o.key === q.optionKey
+        )?.label;
+        botCloned.prompt = botCloned.prompt.replace(
+          q.question.slug,
+          q.question.slug === "residential_zone"
+            ? `${q.optionValue ? q.optionValue + ", " : ""}${optionLabel}`
+            : q.optionValue || optionLabel
+        );
+      });
 
-        const optionLabel = q.question.options.find(o => o.key === q.optionKey)?.label;
-        botCloned.prompt = botCloned.prompt.replace(q.question.slug, q.question.slug === 'residential_zone' ? `${q.optionValue ? q.optionValue+', ' : ''}${optionLabel}` : (q.optionValue || optionLabel))
-      })
-
-      botCloned.prompt += ` Todo esto en el idioma ${languages[userQuestionary.languageLocale || 'es']}.`;
-      console.log('Prompt generated with questionary answers:', botCloned.prompt)
+      botCloned.prompt += ` Todo esto en el idioma ${
+        languages[userQuestionary.languageLocale || "es"]
+      }.`;
+      console.log(
+        "Prompt generated with questionary answers:",
+        botCloned.prompt
+      );
     }
 
     const firstSystemMessage = {
@@ -46,7 +62,8 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       throw new Error("Failed to generate message with openai service");
     const reply = firstResponse.data.choices[0].message["content"];
     const firstAssistantMessage = { role: "assistant", content: reply };
-    if (userId && bot.type === 'webform') console.log('Response generated with questionary answers:', reply);
+    if (userId && bot.type === "webform")
+      console.log("Response generated with questionary answers:", reply);
 
     return {
       firstSystemMessage,
@@ -106,13 +123,18 @@ const initializeIO = async (io) => {
         "questionary response received"
       );
       if (questionaryIndex !== -1) {
-        const questionaryQuestionIndex = questionaries[questionaryIndex].questions.findIndex(q => q.question === questionaryResponse.question)
+        const questionaryQuestionIndex = questionaries[
+          questionaryIndex
+        ].questions.findIndex(
+          (q) => q.question === questionaryResponse.question
+        );
         if (questionaryQuestionIndex !== -1) {
-          questionaries[questionaryIndex].questions[questionaryQuestionIndex] = questionaryResponse;
+          questionaries[questionaryIndex].questions[questionaryQuestionIndex] =
+            questionaryResponse;
         } else {
           questionaries[questionaryIndex].questions.push(questionaryResponse);
         }
-      } 
+      }
     });
 
     socket.on("questionary finished", async (language) => {
@@ -122,15 +144,19 @@ const initializeIO = async (io) => {
       );
       questionaries[questionaryIndex].languageLocale = language || "es";
       if (questionaryIndex !== -1) {
-        const questionaryCreated = await userQuestionaryInteractor.createUserQuestionary(questionaries[questionaryIndex]);
-        if (!questionaryCreated) return socket.emit("questionary not saved", socket.id);
+        const questionaryCreated =
+          await userQuestionaryInteractor.createUserQuestionary(
+            questionaries[questionaryIndex]
+          );
+        if (!questionaryCreated)
+          return socket.emit("questionary not saved", socket.id);
         questionaries.splice(questionaryIndex, 1);
         socket.emit(
           "questionary saved",
-          questionaryCreated.questionary.bot.name,
+          questionaryCreated.questionary.bot.name
         );
       }
-    })
+    });
 
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
@@ -160,12 +186,15 @@ const initializeIO = async (io) => {
         socket.emit("message", {
           body: firstAssistantMessage.content,
         });
-        chatInteractor.createChat({
-          chatId: socket.id,
-          firstName: "User[web]",
-          model: chatBot.model,
-          botName: chatBot.name,
-        }, formId);
+        chatInteractor.createChat(
+          {
+            chatId: socket.id,
+            firstName: "User[web]",
+            model: chatBot.model,
+            botName: chatBot.name,
+          },
+          formId
+        );
 
         await messageInteractor.createMessage({
           chatId: socket.id,
@@ -193,6 +222,22 @@ const initializeIO = async (io) => {
         });
       }
     });
+    socket.on("external link", async (href) => {
+      const conversationIndex = conversations.findIndex(
+        (user) => user.userId === socket.id
+      );
+      const chatBot = bots.find(
+        (b) => b.name == conversations[conversationIndex]?.botName
+      );
+      if (chatBot)
+        await messageInteractor.createMessage({
+          chatId: socket.id,
+          botName: chatBot.name,
+          data: `El usuario hizo click al enlace que dirige a ${href}.`,
+          role: "user",
+        });
+    });
+
     socket.on("message", async (content) => {
       try {
         socket.emit("message received", {
@@ -267,7 +312,9 @@ const initializeIO = async (io) => {
         (q) => q.userId === socket.id
       );
       if (questionaryIndex !== -1) {
-        userQuestionaryInteractor.createUserQuestionary(questionaries[questionaryIndex])
+        userQuestionaryInteractor.createUserQuestionary(
+          questionaries[questionaryIndex]
+        );
         questionaries.splice(questionaryIndex, 1);
       }
     });
