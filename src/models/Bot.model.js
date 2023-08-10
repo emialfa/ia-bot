@@ -12,6 +12,10 @@ const Bot = new Schema(
     temperature: Number,
     type: String,
     maxMessageCount: Number,
+    active: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -44,7 +44,7 @@ const updateBotById = async (botId, bot) => {
     
     if (botFounded.telegramToken?.length) {
       await telegramInteractor.stopBot(botFounded.telegramToken);
-      telegramInteractor.initializeBot(
+      if (bot.active) telegramInteractor.initializeBot(
         bot.telegramToken || botFounded.telegramToken,
         bot.prompt || botFounded.prompt,
         bot.model || botFounded.model,
@@ -53,7 +53,11 @@ const updateBotById = async (botId, bot) => {
         bot.name || botFounded.name
         );
       }  else {
-        updateBot({...botFounded._doc, ...bot})
+        if (bot.active) {
+          botFounded.active ? updateBot({...botFounded._doc, ...bot}) : addBot({...botFounded._doc, ...bot})
+        } else {
+          removeBot(botId);
+        }
       }
       
     return await botRepository.updateBotById(botId, bot);
@@ -81,3 +85,4 @@ const deleteBot  = async (botId) => {
 }
 
 module.exports = { getBots, getBotById, createBot, updateBotById, deleteBot };
+

@@ -14,7 +14,7 @@ const initializeTelegramBots = async () => {
   const bots = await botInteractor.getBots();
   for (const bot of bots.values) {
     if (bot.telegramToken) {
-      if (process.env.NODE_ENV === "production")
+      if (process.env.NODE_ENV === "production" && bot.active)
         telegramInteractor.initializeBot(
           bot.telegramToken,
           bot.prompt,
@@ -24,7 +24,7 @@ const initializeTelegramBots = async () => {
           bot.name
         );
     } else {
-      botsWeb.push(bot);
+      if (bot.active) botsWeb.push(bot);
     }
   }
   //  telegramInteractor.initializeBot(
