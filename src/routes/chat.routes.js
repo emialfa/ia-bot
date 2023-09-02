@@ -7,5 +7,4 @@ router.get('/:externalId',  chatController.getChatByExternalIdAndBotName);
 
 router.get('/', chatController.getChats);
 
-
 module.exports = router;

@@ -193,7 +193,8 @@ const initializeIO = async (io) => {
             model: chatBot.model,
             botName: chatBot.name,
           },
-          formId
+          formId,
+          firstSystemMessage.content,
         );
 
         await messageInteractor.createMessage({

@@ -12,18 +12,26 @@ const createUserQuestionary = async (userQuestionary) => {
   const newUserQuestionary = new UserQuestionary(userQuestionary);
   const savedUserQuestionary = await newUserQuestionary.save();
 
-  const userQuestionaryPopulated = await UserQuestionary.findById(savedUserQuestionary._id).populate([{
-    path: 'questionary',
-    model: 'Questionary',
-    populate: [
-      {
-        path: 'bot',
-        model: 'Bot',
-      }
-    ]
-  }]);
+  const userQuestionaryPopulated = await UserQuestionary.findById(
+    savedUserQuestionary._id
+  ).populate([
+    {
+      path: "questionary",
+      model: "Questionary",
+      populate: [
+        {
+          path: "bot",
+          model: "Bot",
+        },
+      ],
+    },
+  ]);
 
   return userQuestionaryPopulated;
 };
 
-module.exports = { getUserQuestionary, createUserQuestionary };
+const updateUserQuestionaryByUserId = async (userId, data) => {
+  return await UserQuestionary.updateOne({ userId }, data);
+};
+
+module.exports = { getUserQuestionary, createUserQuestionary, updateUserQuestionaryByUserId };

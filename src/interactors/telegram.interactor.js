@@ -56,9 +56,9 @@ const initializeBot = (apiTokenTelegram, prompt, model, temperature, maxMessageC
   
       chatInteractor.createChat({
         externalId: chatId,
-        firstName: chat.message.chat.first_name,
-        type: chat.message.chat.type,
-        model: response.data.model,
+        firstName: chat?.message?.chat?.first_name,
+        type: chat?.message?.chat?.type,
+        model: response?.data?.model,
         botName: botName || '',
       })
   
@@ -67,9 +67,9 @@ const initializeBot = (apiTokenTelegram, prompt, model, temperature, maxMessageC
         botName: botName || '',
         data: 'Initializing chat...',
         role: 'system',
-        promptToken: response.data.usage.prompt_tokens,
-        tokens: response.data.usage.prompt_tokens,
-        totalTokens: response.data.usage.prompt_tokens,
+        promptToken: response.data?.usage?.prompt_tokens,
+        tokens: response.data?.usage?.prompt_tokens,
+        totalTokens: response.data?.usage?.prompt_tokens,
       })
   
       await messageInteractor.createMessage({
@@ -77,9 +77,9 @@ const initializeBot = (apiTokenTelegram, prompt, model, temperature, maxMessageC
         botName: botName || '',
         data: reply,
         role: 'assistant',
-        promptToken: response.data.usage.prompt_tokens,
-        tokens: response.data.usage.completion_tokens,
-        totalTokens: response.data.usage.total_tokens,
+        promptToken: response?.data?.usage?.prompt_tokens,
+        tokens: response?.data?.usage?.completion_tokens,
+        totalTokens: response?.data?.usage?.total_tokens,
       })
     } catch (error) {
         console.log(error);
@@ -190,7 +190,7 @@ const initializeBot = (apiTokenTelegram, prompt, model, temperature, maxMessageC
   };
 
   const stopBot = async (botToken) => {
-    const botToStopIndex = botsInitialized.findIndex((bot) => bot.telegram.token === botToken);
+    const botToStopIndex = botsInitialized.findIndex((bot) => bot?.telegram?.token === botToken);
     if (botToStopIndex !== -1) {
         await botsInitialized[botToStopIndex].stop();
         botsInitialized.splice(botToStopIndex, 1)

@@ -20,16 +20,17 @@ const getChatsWithTotalTokens = async (page, items, search) => {
   if (search) {
     query.firstName = { $regex: `${search || ""}`, $options: "i" };
   }
-  const chats = await Chat.find(query).populate([
-    {
-      path: "userQuestionary",
-      model: "UserQuestionary",
-      populate: ["questions.question"],
-    },
-  ])
-    .skip((page - 1) * items)
-    .limit(items)
-    .sort({ createdAt: "desc" });
+  const chats = await Chat.find(query)
+    .populate([
+      {
+        path: "userQuestionary",
+        model: "UserQuestionary",
+        populate: ["questions.question"],
+      },
+    ])
+    //.sort({ createdAt: "desc" })
+    // .skip((page - 1) * items)
+    // .limit(items);
 
   const count = await Chat.find().countDocuments();
 
@@ -56,7 +57,8 @@ const getChatsWithTotalTokens = async (page, items, search) => {
           botName: "$botName",
         },
         totalTokens: { $sum: "$tokens" },
-        totalMessages: { $sum: 1 }
+        totalMessages: { $sum: 1 },
+        latestUpdatedAt: { $max: "$updatedAt" },
       },
     },
   ]);
@@ -71,10 +73,17 @@ const getChatsWithTotalTokens = async (page, items, search) => {
     );
     const totalTokens = result ? result.totalTokens : 0;
     const totalMessages = result ? result.totalMessages : 0;
-    return { ...chat.toObject(), totalTokens, totalMessages, languageLocale: chat?.userQuestionary?.languageLocale || 'es'};
+    const updatedAt = result ? result.latestUpdatedAt : chat.updatedAt;
+    return {
+      ...chat.toObject(),
+      updatedAt,
+      totalTokens,
+      totalMessages,
+      languageLocale: chat?.userQuestionary?.languageLocale || "es",
+    };
   });
 
-  return { chats: chatsWithTotalTokens, count };
+  return { chats: chatsWithTotalTokens.sort((a,b) =>  b.updatedAt - a.updatedAt).slice(items * (page - 1), items * page), count };
 };
 
 const getChatByExternalId = async (externalId) => {

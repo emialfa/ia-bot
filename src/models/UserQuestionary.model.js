@@ -38,6 +38,7 @@ const UserQuestionary = new Schema(
           },
       },
     ],
+    generatedPrompt: String
   },
   {
     timestamps: true,
