@@ -104,6 +104,13 @@ const initializeIO = async (io) => {
     socket.on("questionary", async (phoneNumber, questionaryId) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
+      const phoneNumberValidated = phoneNumber?.length
+        ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(phoneNumber)
+        : true;
+
+      if (!phoneNumberValidated)
+        return socket.emit("phone number already used", phoneNumber);
+
       questionaries.push({
         userId: socket.id,
         phoneNumber: phoneNumber || "",
@@ -194,7 +201,7 @@ const initializeIO = async (io) => {
             botName: chatBot.name,
           },
           formId,
-          firstSystemMessage.content,
+          firstSystemMessage.content
         );
 
         await messageInteractor.createMessage({
