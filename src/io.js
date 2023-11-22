@@ -1,5 +1,6 @@
 const conversations = [];
 const questionaries = [];
+const userIps = [];
 let bots = [];
 
 const openaiService = require("./services/openai.service");
@@ -98,6 +99,9 @@ const removeBot = (botId) => {
 const initializeIO = async (io) => {
   io.on("connection", async (socket) => {
     console.log("New client connected:", socket.id);
+    const clientIP =
+      socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
+    console.log(`Client connected from IP: ${clientIP}`);
 
     // ********* questionary events *********
 
@@ -105,10 +109,14 @@ const initializeIO = async (io) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       const phoneNumberValidated = phoneNumber?.length
-        ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(phoneNumber)
+        ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+            phoneNumber
+          )
         : true;
+      
+      const invalidIp = userIps.find((userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date());
 
-      if (!phoneNumberValidated)
+      if (!phoneNumberValidated || invalidIp)
         return socket.emit("phone number already used", phoneNumber);
 
       questionaries.push({
@@ -151,6 +159,7 @@ const initializeIO = async (io) => {
       );
       questionaries[questionaryIndex].languageLocale = language || "es";
       if (questionaryIndex !== -1) {
+        userIps.push({ip: clientIP, expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24)});
         const questionaryCreated =
           await userQuestionaryInteractor.createUserQuestionary(
             questionaries[questionaryIndex]
