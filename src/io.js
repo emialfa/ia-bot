@@ -177,6 +177,11 @@ const initializeIO = async (io) => {
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
       try {
+        const invalidIp = userIps.find((userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date() && userIp.promptGenerated);
+
+      if (!phoneNumberValidated || invalidIp)
+        return socket.emit("phone number already used", phoneNumber);
+
         socket.emit("bot received", {
           body: "bot received",
         });
@@ -185,6 +190,10 @@ const initializeIO = async (io) => {
           socket.emit("bot not found", { botName: botName });
           return;
         }
+
+        const userIpIndex = userIps.findIndex((userIp) => userIp.ip === clientIP);
+        if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
+
         const firstSystemAndAssistantMessage =
           await generateFirstSystemAndAssistantMessage(chatBot, formId);
         if (!firstSystemAndAssistantMessage)
