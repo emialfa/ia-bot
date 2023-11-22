@@ -179,7 +179,7 @@ const initializeIO = async (io) => {
       try {
         const invalidIp = userIps.find((userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date() && userIp.promptGenerated);
 
-      if (!phoneNumberValidated || invalidIp)
+      if (invalidIp)
         return socket.emit("phone number already used", phoneNumber);
 
         socket.emit("bot received", {
