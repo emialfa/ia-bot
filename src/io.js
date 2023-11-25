@@ -264,6 +264,22 @@ const initializeIO = async (io) => {
         });
     });
 
+    socket.on("get evaluation", async (clinicName) => {
+      const conversationIndex = conversations.findIndex(
+        (user) => user.userId === socket.id
+      );
+      const chatBot = bots.find(
+        (b) => b.name == conversations[conversationIndex]?.botName
+      );
+      if (chatBot)
+        await messageInteractor.createMessage({
+          chatId: socket.id,
+          botName: chatBot.name,
+          data: `El usuario solicitó una valoración para la clínica ${clinicName}.`,
+          role: "user",
+        });
+    });
+
     socket.on("message", async (content) => {
       try {
         socket.emit("message received", {
