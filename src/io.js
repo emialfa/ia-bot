@@ -113,8 +113,10 @@ const initializeIO = async (io) => {
             phoneNumber
           )
         : true;
-      
-      const invalidIp = userIps.find((userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date());
+
+      const invalidIp = userIps.find(
+        (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
+      );
 
       if (!phoneNumberValidated || invalidIp)
         return socket.emit("phone number already used", phoneNumber);
@@ -159,7 +161,10 @@ const initializeIO = async (io) => {
       );
       questionaries[questionaryIndex].languageLocale = language || "es";
       if (questionaryIndex !== -1) {
-        userIps.push({ip: clientIP, expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24)});
+        userIps.push({
+          ip: clientIP,
+          expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
+        });
         const questionaryCreated =
           await userQuestionaryInteractor.createUserQuestionary(
             questionaries[questionaryIndex]
@@ -177,10 +182,14 @@ const initializeIO = async (io) => {
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
       try {
-        const invalidIp = userIps.find((userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date() && userIp.promptGenerated);
+        const invalidIp = userIps.find(
+          (userIp) =>
+            userIp.ip === clientIP &&
+            userIp.expirationDate > new Date() &&
+            userIp.promptGenerated
+        );
 
-      if (invalidIp)
-        return socket.emit("phone number already used", '');
+        if (invalidIp) return socket.emit("phone number already used", "");
 
         socket.emit("bot received", {
           body: "bot received",
@@ -191,7 +200,9 @@ const initializeIO = async (io) => {
           return;
         }
 
-        const userIpIndex = userIps.findIndex((userIp) => userIp.ip === clientIP);
+        const userIpIndex = userIps.findIndex(
+          (userIp) => userIp.ip === clientIP
+        );
         if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
 
         const firstSystemAndAssistantMessage =
@@ -280,6 +291,22 @@ const initializeIO = async (io) => {
         });
     });
 
+    socket.on("clinics viewed", async (clinicName) => {
+      const conversationIndex = conversations.findIndex(
+        (user) => user.userId === socket.id
+      );
+      const chatBot = bots.find(
+        (b) => b.name == conversations[conversationIndex]?.botName
+      );
+      if (chatBot)
+        await messageInteractor.createMessage({
+          chatId: socket.id,
+          botName: chatBot.name,
+          data: `El usuario está en la página de clinicas.`,
+          role: "user",
+        });
+    });
+
     socket.on("message", async (content) => {
       try {
         socket.emit("message received", {
@@ -347,8 +374,20 @@ const initializeIO = async (io) => {
       const conversationIndex = conversations.findIndex(
         (user) => user.userId === socket.id
       );
-      if (conversationIndex !== -1)
+      if (conversationIndex !== -1) {
+        const chatBot = bots.find(
+          (b) => b.name == conversations[conversationIndex]?.botName
+        );
+  
+        messageInteractor.createMessage({
+          chatId: socket.id,
+          botName: chatBot.name,
+          data: `El usuario se ha desconectado.`,
+          role: "user",
+        });
+
         return conversations.splice(conversationIndex, 1);
+      }
 
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
@@ -358,7 +397,7 @@ const initializeIO = async (io) => {
           questionaries[questionaryIndex]
         );
         questionaries.splice(questionaryIndex, 1);
-      }
+      }    
     });
   });
 };
