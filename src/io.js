@@ -10,11 +10,11 @@ const messageInteractor = require("./interactors/message.interactor");
 const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
 const { cloneObject } = require("./utils/functions");
+const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
 
 const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
   try {
-    console.log({ bot });
     const botCloned = cloneObject(bot);
     if (userId) {
       const userQuestionary =
@@ -22,13 +22,6 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       if (!userQuestionary || bot.type !== "webform") throw new Error();
 
       userQuestionary.questions.forEach((q) => {
-        console.log("slug:", q.question.slug);
-        console.log(
-          "optionSelected:",
-          q.optionValue ||
-            q.question.options.find((o) => o.key === q.optionKey)?.label
-        );
-
         const optionLabel = q.question.options.find(
           (o) => o.key === q.optionKey
         )?.label;
@@ -43,9 +36,9 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
       botCloned.prompt += ` Todo esto en el idioma ${
         languages[userQuestionary.languageLocale || "es"]
       }.`;
-      console.log(
-        "Prompt generated with questionary answers:",
-        botCloned.prompt
+      clinicsLogs(
+        `Prompt generated with questionary answers: ${botCloned.prompt}`,
+        userId
       );
     }
 
@@ -64,7 +57,10 @@ const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
     const reply = firstResponse.data.choices[0].message["content"];
     const firstAssistantMessage = { role: "assistant", content: reply };
     if (userId && bot.type === "webform")
-      console.log("Response generated with questionary answers:", reply);
+      clinicsLogs(
+        `Response generated with questionary answers: ${reply}`,
+        userId
+      );
 
     return {
       firstSystemMessage,
@@ -98,16 +94,22 @@ const removeBot = (botId) => {
 
 const initializeIO = async (io) => {
   io.on("connection", async (socket) => {
-    console.log("New client connected:", socket.id);
+    generalLogs("New client connected", socket.id, undefined);
     const clientIP =
       socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
-    console.log(`Client connected from IP: ${clientIP}`);
+    generalLogs(
+      `Client connected from IP: ${clientIP}`,
+      socket.id,
+      undefined,
+      clientIP
+    );
 
     // ********* questionary events *********
 
     socket.on("questionary", async (phoneNumber, questionaryId) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
+      questionaryLogs("Questionary started", socket.id, phoneNumber, clientIP);
       const phoneNumberValidated = phoneNumber?.length
         ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
             phoneNumber
@@ -118,8 +120,11 @@ const initializeIO = async (io) => {
         (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
       );
 
-      if (!phoneNumberValidated || invalidIp)
+      if (!phoneNumberValidated || invalidIp) {
+        if (!phoneNumberValidated) questionaryLogs("phone number already used", socket.id, phoneNumber, clientIP);
+        if (invalidIp) questionaryLogs("ip already used today", socket.id, phoneNumber, clientIP);
         return socket.emit("phone number already used", phoneNumber);
+      }
 
       questionaries.push({
         userId: socket.id,
@@ -134,6 +139,26 @@ const initializeIO = async (io) => {
     socket.on("questionary response", (questionaryResponse) => {
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
+      );
+
+      questionaryLogs(
+        `${questionaryResponse?.backupQuestion?.label}: ${
+          questionaryResponse.optionValue ||
+          `${
+            questionaryResponse.backupQuestion.options.find(
+              (o) => o.key === questionaryResponse.optionKey
+            ).label.length
+              ? questionaryResponse.backupQuestion.options.find(
+                  (o) => o.key === questionaryResponse.optionKey
+                ).label
+              : questionaryResponse.backupQuestion.options.find(
+                  (o) => o.key === questionaryResponse.optionKey
+                ).key
+          }`
+        }`,
+        socket.id,
+        questionaries?.[questionaryIndex]?.phoneNumber,
+        clientIP
       );
       socket.emit(
         "questionary response received",
@@ -155,12 +180,19 @@ const initializeIO = async (io) => {
     });
 
     socket.on("questionary finished", async (language) => {
-      console.log(`questionary of user "${socket.id}" finished`);
+      questionaryLogs("Questionary finished", socket.id, undefined, clientIP);
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
       );
-      questionaries[questionaryIndex].languageLocale = language || "es";
       if (questionaryIndex !== -1) {
+        questionaryLogs(
+          `Questionary finished and saving:`,
+          socket.id,
+          questionaries[questionaryIndex]?.phoneNumber,
+          clientIP,
+          questionaries[questionaryIndex],
+        );
+        questionaries[questionaryIndex].languageLocale = language || "es";
         userIps.push({
           ip: clientIP,
           expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
@@ -169,8 +201,15 @@ const initializeIO = async (io) => {
           await userQuestionaryInteractor.createUserQuestionary(
             questionaries[questionaryIndex]
           );
-        if (!questionaryCreated)
+        if (!questionaryCreated) {
+          questionaryLogs(
+            `Questionary not saved: ${questionaries[questionaryIndex]}`,
+            socket.id,
+            phoneNumber,
+            clientIP
+          );
           return socket.emit("questionary not saved", socket.id);
+        }
         questionaries.splice(questionaryIndex, 1);
         socket.emit(
           "questionary saved",
@@ -189,7 +228,10 @@ const initializeIO = async (io) => {
             userIp.promptGenerated
         );
 
-        if (invalidIp) return socket.emit("phone number already used", "");
+        if (invalidIp) {
+          clinicsLogs("Ip already used today", socket.id, undefined, clientIP);
+          return socket.emit("phone number already used", "");
+        }
 
         socket.emit("bot received", {
           body: "bot received",
@@ -253,7 +295,7 @@ const initializeIO = async (io) => {
           totalTokens: firstMessageTokens.total_tokens,
         });
       } catch (error) {
-        console.log(error);
+        console.error(error);
         socket.emit("message", {
           body: "An error has occurred. Please try again later.",
         });
@@ -266,13 +308,20 @@ const initializeIO = async (io) => {
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
-      if (chatBot)
+      if (chatBot) {
+        clinicsLogs(
+          `External link clicked: ${href}`,
+          socket.id,
+          undefined,
+          clientIP
+        );
         await messageInteractor.createMessage({
           chatId: socket.id,
           botName: chatBot.name,
           data: `El usuario hizo click al enlace que dirige a ${href}.`,
           role: "user",
         });
+      }
     });
 
     socket.on("get evaluation", async (clinicName) => {
@@ -282,13 +331,20 @@ const initializeIO = async (io) => {
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
-      if (chatBot)
+      if (chatBot) {
+        clinicsLogs(
+          `The user requested an evaluation for the clinic:  ${clinicName}`,
+          socket.id,
+          undefined,
+          clientIP
+        );
         await messageInteractor.createMessage({
           chatId: socket.id,
           botName: chatBot.name,
           data: `El usuario solicitó una valoración para la clínica ${clinicName}.`,
           role: "user",
         });
+      }
     });
 
     socket.on("clinics viewed", async (clinicName) => {
@@ -298,13 +354,20 @@ const initializeIO = async (io) => {
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
-      if (chatBot)
+      if (chatBot) {
+        clinicsLogs(
+          `The user is on the clinics page.`,
+          socket.id,
+          undefined,
+          clientIP
+        );
         await messageInteractor.createMessage({
           chatId: socket.id,
           botName: chatBot.name,
           data: `El usuario está en la página de clinicas.`,
           role: "user",
         });
+      }
     });
 
     socket.on("message", async (content) => {
@@ -370,15 +433,33 @@ const initializeIO = async (io) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
+      generalLogs("Client disconnected", socket.id, undefined, clientIP);
+
+      const questionaryIndex = questionaries.findIndex(
+        (q) => q.userId === socket.id
+      );
+      if (questionaryIndex !== -1) {
+        userQuestionaryInteractor.createUserQuestionaryAndChat(
+          questionaries[questionaryIndex]
+        );
+
+        userIps.push({
+          ip: clientIP,
+          expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
+        });
+        
+        questionaries.splice(questionaryIndex, 1);
+      }
+
       const conversationIndex = conversations.findIndex(
         (user) => user.userId === socket.id
       );
+
       if (conversationIndex !== -1) {
         const chatBot = bots.find(
           (b) => b.name == conversations[conversationIndex]?.botName
         );
-  
+
         messageInteractor.createMessage({
           chatId: socket.id,
           botName: chatBot.name,
@@ -388,16 +469,6 @@ const initializeIO = async (io) => {
 
         return conversations.splice(conversationIndex, 1);
       }
-
-      const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
-      );
-      if (questionaryIndex !== -1) {
-        userQuestionaryInteractor.createUserQuestionary(
-          questionaries[questionaryIndex]
-        );
-        questionaries.splice(questionaryIndex, 1);
-      }    
     });
   });
 };

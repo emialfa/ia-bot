@@ -1,5 +1,6 @@
 const userQuestionaryRepository = require("../repositories/userQuestionary.repository");
 const questionaryRepository = require("../repositories/questionary.repository");
+const chatInteractor = require("../interactors/chat.interactor");
 
 const getUserQuestionary = async (userId) => {
   try {
@@ -30,6 +31,23 @@ const createUserQuestionary = async (userQuestionary) => {
   }
 };
 
+const createUserQuestionaryAndChat = async (userQuestionaryToCreate) => {
+  try {
+    const userQuestionary = await createUserQuestionary(userQuestionaryToCreate);
+    await chatInteractor.createChat(
+      {
+        chatId: userQuestionary.userId,
+        firstName: "User[web]",
+        model: userQuestionary.questionary.bot.model,
+        botName: userQuestionary.questionary.bot.name,
+      },
+      userQuestionary.userId
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const validateUserQuestionaryWithPhoneNumber = async (phoneNumber) => {
   try {
     const userQuestionary = await userQuestionaryRepository.getUserQuestionary({
@@ -42,4 +60,9 @@ const validateUserQuestionaryWithPhoneNumber = async (phoneNumber) => {
   }
 };
 
-module.exports = { getUserQuestionary, createUserQuestionary, validateUserQuestionaryWithPhoneNumber };
+module.exports = {
+  getUserQuestionary,
+  createUserQuestionary,
+  createUserQuestionaryAndChat,
+  validateUserQuestionaryWithPhoneNumber,
+};
