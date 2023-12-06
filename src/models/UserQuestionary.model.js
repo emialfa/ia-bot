@@ -38,7 +38,8 @@ const UserQuestionary = new Schema(
           },
       },
     ],
-    generatedPrompt: String
+    generatedPrompt: String,
+    firstResponsePrompt: String,
   },
   {
     timestamps: true,

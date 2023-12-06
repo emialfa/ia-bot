@@ -84,7 +84,7 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
   }
 };
 
-const createChat = async (chat, userId, questionaryPrompt) => {
+const createChat = async (chat, userId, questionaryPrompt, responsePrompt) => {
   try {
     const { externalId, chatId } = chat;
     let userQuestionary;
@@ -101,6 +101,7 @@ const createChat = async (chat, userId, questionaryPrompt) => {
     if (userId && questionaryPrompt)
       await userQuestionaryRepository.updateUserQuestionaryByUserId(userId, {
         generatedPrompt: questionaryPrompt,
+        firstResponsePrompt: responsePrompt,
       });
 
     return await chatRepository.createChat({

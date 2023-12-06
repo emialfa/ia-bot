@@ -13,14 +13,14 @@ const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
 
-const generateFirstSystemAndAssistantMessage = async (bot, userId) => {
+const generateFirstSystemAndAssistantMessage = async (
+  bot,
+  userId,
+  userQuestionary
+) => {
   try {
     const botCloned = cloneObject(bot);
-    if (userId) {
-      const userQuestionary =
-        await userQuestionaryInteractor.getUserQuestionary(userId);
-      if (!userQuestionary || bot.type !== "webform") throw new Error();
-
+    if (userId && userQuestionary) {
       userQuestionary.questions.forEach((q) => {
         const optionLabel = q.question.options.find(
           (o) => o.key === q.optionKey
@@ -121,8 +121,20 @@ const initializeIO = async (io) => {
       );
 
       if (!phoneNumberValidated || invalidIp) {
-        if (!phoneNumberValidated) questionaryLogs("phone number already used", socket.id, phoneNumber, clientIP);
-        if (invalidIp) questionaryLogs("ip already used today", socket.id, phoneNumber, clientIP);
+        if (!phoneNumberValidated)
+          questionaryLogs(
+            "phone number already used",
+            socket.id,
+            phoneNumber,
+            clientIP
+          );
+        if (invalidIp)
+          questionaryLogs(
+            "ip already used today",
+            socket.id,
+            phoneNumber,
+            clientIP
+          );
         return socket.emit("phone number already used", phoneNumber);
       }
 
@@ -190,7 +202,7 @@ const initializeIO = async (io) => {
           socket.id,
           questionaries[questionaryIndex]?.phoneNumber,
           clientIP,
-          questionaries[questionaryIndex],
+          questionaries[questionaryIndex]
         );
         questionaries[questionaryIndex].languageLocale = language || "es";
         userIps.push({
@@ -247,8 +259,38 @@ const initializeIO = async (io) => {
         );
         if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
 
+        const userQuestionary =
+          await userQuestionaryInteractor.getUserQuestionary(formId);
+        if (!userQuestionary || chatBot.type !== "webform") throw new Error();
+
+        if (userQuestionary?.generatedPrompt) {
+          if (userQuestionary?.firstResponsePrompt) {
+            clinicsLogs(
+              "Prompt already generated, showing first response of prompt",
+              socket.id,
+              undefined,
+              clientIP
+            );
+            return socket.emit("message", {
+              body: userQuestionary?.firstResponsePrompt,
+            });
+          }
+          clinicsLogs(
+            "Prompt already generated, showing error message",
+            socket.id,
+            undefined,
+            clientIP
+          );
+          
+          return socket.emit("phone number already used", "");
+        }
+
         const firstSystemAndAssistantMessage =
-          await generateFirstSystemAndAssistantMessage(chatBot, formId);
+          await generateFirstSystemAndAssistantMessage(
+            chatBot,
+            formId,
+            userQuestionary
+          );
         if (!firstSystemAndAssistantMessage)
           throw new Error("Failed to generate message with openai service");
         const {
@@ -272,7 +314,8 @@ const initializeIO = async (io) => {
             botName: chatBot.name,
           },
           formId,
-          firstSystemMessage.content
+          firstSystemMessage.content,
+          firstAssistantMessage.content
         );
 
         await messageInteractor.createMessage({
@@ -447,7 +490,7 @@ const initializeIO = async (io) => {
           ip: clientIP,
           expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
         });
-        
+
         questionaries.splice(questionaryIndex, 1);
       }
 
