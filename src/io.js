@@ -267,10 +267,16 @@ const initializeIO = async (io) => {
           if (userQuestionary?.firstResponsePrompt) {
             clinicsLogs(
               "Prompt already generated, showing first response of prompt",
-              socket.id,
+              userQuestionary.userId,
               undefined,
               clientIP
             );
+            const conversationIndex = conversations.findIndex((c) => c.userId === userQuestionary.userId);
+            if (conversationIndex === -1) conversations.push({
+              userId: userQuestionary.userId,
+              botName: userQuestionary.bot.name,
+              lastMessages: [userQuestionary.generatedPrompt, userQuestionary.firstResponsePrompt],
+            });
             return socket.emit("message", {
               body: userQuestionary?.firstResponsePrompt,
             });
@@ -281,7 +287,7 @@ const initializeIO = async (io) => {
             undefined,
             clientIP
           );
-          
+
           return socket.emit("phone number already used", "");
         }
 
