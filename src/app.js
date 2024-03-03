@@ -6,12 +6,8 @@ const path = require('path');
 const { Server: SocketServer } = require("socket.io");
 const chatsRouter = require('./routes/chat.routes');
 const botsRouter = require('./routes/bot.routes');
-const expressIP = require('express-ip');
 
 const app = express();
-
-app.use(expressIP().getIpInfoMiddleware);
-app.set('trust proxy', true);
 
 const server = http.createServer(app);
 const port = process.env.PORT || 5000;

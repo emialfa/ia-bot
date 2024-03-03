@@ -90,6 +90,16 @@ const getChatByExternalId = async (externalId) => {
   return await Chat.findOne({ externalId });
 };
 
+const getChatbyChatId = async (chatId) => {
+  return await Chat.findOne({ chatId }).populate([
+    {
+      path: "userQuestionary",
+      model: "UserQuestionary",
+      populate: ["questions.question"],
+    },
+  ]);
+};
+
 const getChatByExternalIdAndBotName = async (externalId, botName) => {
   return await Chat.findOne({ ...externalId, botName }).populate([
     {
@@ -107,6 +117,7 @@ const createChat = async (chat) => {
 
 module.exports = {
   getChats,
+  getChatbyChatId,
   getChatsWithTotalTokens,
   getChatByExternalId,
   getChatByExternalIdAndBotName,

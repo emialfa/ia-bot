@@ -37,9 +37,9 @@ const createUserQuestionaryAndChat = async (userQuestionaryToCreate) => {
     await chatInteractor.createChat(
       {
         chatId: userQuestionary.userId,
-        firstName: "User[web]",
-        model: userQuestionary.questionary.bot.model,
-        botName: userQuestionary.questionary.bot.name,
+        firstName: userQuestionaryToCreate.phoneNumber || "Anonymous",
+        model: 'Static questionary',
+        botName: 'Static questionary',
       },
       userQuestionary.userId
     );
