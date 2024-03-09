@@ -18,15 +18,21 @@ const io = new SocketServer(server, {
    } : {},
 });
 
+
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cors());
 
-app.use('/hair-questionary/api/chats', chatsRouter);
-app.use('/hair-questionary/api/bots', botsRouter);
+app.use((req, res, next) => {
+  req.url = `/hair-questionary${req.url}`;
+  next();
+});
+
+app.use('/api/chats', chatsRouter);
+app.use('/api/bots', botsRouter);
 app.use(logger('dev'));
 
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/hair-questionary', express.static(path.join(__dirname, 'dist')));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
