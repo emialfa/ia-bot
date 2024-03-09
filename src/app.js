@@ -22,8 +22,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cors());
 
-app.use('/api/chats', chatsRouter);
-app.use('/api/bots', botsRouter);
+app.use('/hair-questionary/api/chats', chatsRouter);
+app.use('/hair-questionary/api/bots', botsRouter);
 app.use(logger('dev'));
 
 app.use(express.static(path.join(__dirname, 'dist')));
