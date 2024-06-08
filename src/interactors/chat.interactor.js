@@ -115,4 +115,29 @@ const createChat = async (chat, userId, questionaryPrompt, responsePrompt) => {
   }
 };
 
-module.exports = { getChats, getChatByExternalIdAndBotName, createChat };
+const createStaticChat = async (chat, userId) => {
+  try {
+    const { chatId } = chat;
+    let userQuestionary;
+    const chatFounded = await chatRepository.getChatbyChatId(
+      chatId,
+    );
+    if (chatFounded) return;
+
+    if (userId)
+      userQuestionary = await userQuestionaryRepository.getUserQuestionary({
+        userId,
+      });
+
+    return await chatRepository.createChat({
+      ...chat,
+      ...(userQuestionary
+        ? { userQuestionary: userQuestionary._id.toString() }
+        : {}),
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { getChats, getChatByExternalIdAndBotName, createChat, createStaticChat };

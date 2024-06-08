@@ -230,6 +230,135 @@ const initializeIO = async (io) => {
       }
     });
 
+    // ********* static questionary events *********
+
+    socket.on("static questionary", async (phoneNumber, questionaryId) => {
+      // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
+      // if (!questionary) return socket.emit("questionary not founded", questionaryId);
+      questionaryLogs("Questionary started", socket.id, phoneNumber);
+      // const phoneNumberValidated = phoneNumber?.length
+      //   ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+      //       phoneNumber
+      //     )
+      //   : true;
+
+      // const invalidIp = userIps.find(
+      //   (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
+      // );
+
+      // if (!phoneNumberValidated || invalidIp) {
+      //   if (!phoneNumberValidated)
+      //     questionaryLogs(
+      //       "phone number already used",
+      //       socket.id,
+      //       phoneNumber,
+      //       clientIP
+      //     );
+      //   if (invalidIp)
+      //     questionaryLogs(
+      //       "ip already used today",
+      //       socket.id,
+      //       phoneNumber,
+      //       clientIP
+      //     );
+      //   return socket.emit("phone number already used", phoneNumber);
+      // }
+
+      questionaries.push({
+        userId: socket.id,
+        phoneNumber: phoneNumber || "",
+        questions: [],
+        questionary: questionaryId,
+      });
+
+      socket.emit("static questionary server socket id", socket.id);
+    });
+
+    socket.on("static questionary response", (questionaryResponse) => {
+      const questionaryIndex = questionaries.findIndex(
+        (q) => q.userId === socket.id
+      );
+
+      questionaryLogs(
+        `${questionaryResponse?.backupQuestion?.label}: ${
+          questionaryResponse.optionValue ||
+          `${
+            questionaryResponse.backupQuestion.options.find(
+              (o) => o.key === questionaryResponse.optionKey
+            ).label.length
+              ? questionaryResponse.backupQuestion.options.find(
+                  (o) => o.key === questionaryResponse.optionKey
+                ).label
+              : questionaryResponse.backupQuestion.options.find(
+                  (o) => o.key === questionaryResponse.optionKey
+                ).key
+          }`
+        }`,
+        socket.id,
+        questionaries?.[questionaryIndex]?.phoneNumber,
+        ""
+      );
+      socket.emit(
+        "static questionary response received",
+        "static questionary response received"
+      );
+      if (questionaryIndex !== -1) {
+        const questionaryQuestionIndex = questionaries[
+          questionaryIndex
+        ].questions.findIndex(
+          (q) => q.question === questionaryResponse.question
+        );
+        if (questionaryQuestionIndex !== -1) {
+          questionaries[questionaryIndex].questions[questionaryQuestionIndex] =
+            questionaryResponse;
+        } else {
+          questionaries[questionaryIndex].questions.push(questionaryResponse);
+        }
+      }
+    });
+
+    socket.on("static questionary finished", async (language) => {
+      questionaryLogs("Questionary finished", socket.id, undefined);
+      const questionaryIndex = questionaries.findIndex(
+        (q) => q.userId === socket.id
+      );
+      if (questionaryIndex !== -1) {
+        questionaryLogs(
+          `Questionary finished and saving:`,
+          socket.id,
+          questionaries[questionaryIndex]?.phoneNumber,
+          "",
+          questionaries[questionaryIndex]
+        );
+        questionaries[questionaryIndex].languageLocale = language || "es";
+        const questionaryCreated =
+          await userQuestionaryInteractor.createUserQuestionary(
+            questionaries[questionaryIndex]
+          );
+        if (!questionaryCreated) {
+          questionaryLogs(
+            `Questionary not saved: ${questionaries[questionaryIndex]}`,
+            socket.id,
+            phoneNumber,
+            ""
+          );
+          return socket.emit("static questionary not saved", socket.id);
+        }
+        chatInteractor.createChat(
+          {
+            chatId: socket.id,
+            firstName:
+              questionaries[questionaryIndex]?.phoneNumber || "Anonymous",
+            model: "Static questionary",
+            botName: "Static questionary",
+          },
+          socket.id
+        );
+        questionaries.splice(questionaryIndex, 1);
+        socket.emit("static questionary saved", socket.id);
+      }
+    });
+
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
       try {
@@ -271,12 +400,18 @@ const initializeIO = async (io) => {
               undefined,
               clientIP
             );
-            const conversationIndex = conversations.findIndex((c) => c.userId === userQuestionary.userId);
-            if (conversationIndex === -1) conversations.push({
-              userId: userQuestionary.userId,
-              botName: userQuestionary.bot.name,
-              lastMessages: [userQuestionary.generatedPrompt, userQuestionary.firstResponsePrompt],
-            });
+            const conversationIndex = conversations.findIndex(
+              (c) => c.userId === userQuestionary.userId
+            );
+            if (conversationIndex === -1)
+              conversations.push({
+                userId: userQuestionary.userId,
+                botName: userQuestionary.bot.name,
+                lastMessages: [
+                  userQuestionary.generatedPrompt,
+                  userQuestionary.firstResponsePrompt,
+                ],
+              });
             return socket.emit("message", {
               body: userQuestionary?.firstResponsePrompt,
             });
@@ -489,7 +624,8 @@ const initializeIO = async (io) => {
       );
       if (questionaryIndex !== -1) {
         userQuestionaryInteractor.createUserQuestionaryAndChat(
-          questionaries[questionaryIndex]
+          questionaries[questionaryIndex],
+          "static questionary"
         );
 
         userIps.push({

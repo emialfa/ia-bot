@@ -31,18 +31,33 @@ const createUserQuestionary = async (userQuestionary) => {
   }
 };
 
-const createUserQuestionaryAndChat = async (userQuestionaryToCreate) => {
+const createUserQuestionaryAndChat = async (userQuestionaryToCreate, type) => {
   try {
-    const userQuestionary = await createUserQuestionary(userQuestionaryToCreate);
-    await chatInteractor.createChat(
-      {
-        chatId: userQuestionary.userId,
-        firstName: "User[web]",
-        model: userQuestionary.questionary.bot.model,
-        botName: userQuestionary.questionary.bot.name,
-      },
-      userQuestionary.userId
+    const userQuestionary = await createUserQuestionary(
+      userQuestionaryToCreate
     );
+    if (type === "static questionary")
+      await chatInteractor.createStaticChat(
+        {
+          chatId: userQuestionary.userId,
+          firstName: userQuestionaryToCreate.phoneNumber || "Anonymous",
+          model: "Static questionary",
+          botName: "Static questionary",
+        },
+        userQuestionary.userId
+      );
+    else
+      await chatInteractor.createChat(
+        {
+          chatId: userQuestionary.userId,
+          firstName: "User[web]",
+          model:
+            userQuestionary.questionary?.bot?.model,
+          botName:
+            userQuestionary.questionary?.bot?.name,
+        },
+        userQuestionary.userId
+      );
   } catch (err) {
     console.log(err);
   }
