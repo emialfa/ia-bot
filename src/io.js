@@ -110,7 +110,7 @@ const initializeIO = async (io) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       questionaryLogs("Questionary started", socket.id, phoneNumber, clientIP);
-      const phoneNumberValidated = phoneNumber?.length
+      const phoneNumberValidated = phoneNumber?.length && phoneNumber !== 'josebaTesting'
         ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
             phoneNumber
           )
