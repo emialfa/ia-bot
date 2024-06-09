@@ -13,6 +13,14 @@ const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
 
+(async () => {
+  const chatCompletion = await openai.createChatCompletion({
+    messages: [{ role: 'user', content: 'Say this is a test' }],
+    model: 'gpt-4o',
+  });
+  console.log('response', chatCompletion.data.choices[0].message.content)
+})();
+
 const generateFirstSystemAndAssistantMessage = async (
   bot,
   userId,
@@ -362,17 +370,17 @@ const initializeIO = async (io) => {
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
       try {
-        const invalidIp = userIps.find(
-          (userIp) =>
-            userIp.ip === clientIP &&
-            userIp.expirationDate > new Date() &&
-            userIp.promptGenerated
-        );
+        // const invalidIp = userIps.find(
+        //   (userIp) =>
+        //     userIp.ip === clientIP &&
+        //     userIp.expirationDate > new Date() &&
+        //     userIp.promptGenerated
+        // );
 
-        if (invalidIp) {
-          clinicsLogs("Ip already used today", socket.id, undefined, clientIP);
-          return socket.emit("phone number already used", "");
-        }
+        // if (invalidIp) {
+        //   clinicsLogs("Ip already used today", socket.id, undefined, clientIP);
+        //   return socket.emit("phone number already used", "");
+        // }
 
         socket.emit("bot received", {
           body: "bot received",
