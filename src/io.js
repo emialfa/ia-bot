@@ -13,14 +13,6 @@ const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
 
-(async () => {
-  const chatCompletion = await openai.createChatCompletion({
-    messages: [{ role: 'user', content: 'Say this is a test' }],
-    model: 'gpt-4o',
-  });
-  console.log('response', chatCompletion.data.choices[0].message.content)
-})();
-
 const generateFirstSystemAndAssistantMessage = async (
   bot,
   userId,
