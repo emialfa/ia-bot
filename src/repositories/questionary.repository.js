@@ -7,7 +7,9 @@ const getQuestionaryById = async (id) => {
 };
 
 const getFirstQuestionary = async () => {
-  return await Questionary.findOne();
+  const questionary = await Questionary.find().populate(['bot']);
+  const questinaryWithActiveBot = questionary.find(q => q.bot.active);
+  return questinaryWithActiveBot;
 };
 
 const createQuestionary = async (questionary) => {
