@@ -51,7 +51,7 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
             data:
               questionOptionSelected?.type !== "INPUT"
                 ? questionOptionSelected?.label || ""
-                : q.optionValue,
+                : `${q.optionValue || ""} (${questionOptionSelected?.label || ""})`,
             createdAt: chat.userQuestionary.createdAt,
             tokens: 0,
             totalTokens: 0,
