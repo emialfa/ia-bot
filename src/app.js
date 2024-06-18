@@ -21,7 +21,7 @@ const io = new SocketServer(server, {
   cors:
     process.env.NODE_ENV === "development"
       ? {
-          origin: "http://127.0.0.1:5173",
+          origin: "http://localhost:5173",
         }
       : {},
 });
