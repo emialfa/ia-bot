@@ -28,9 +28,9 @@ const getChatsWithTotalTokens = async (page, items, search) => {
         populate: ["questions.question"],
       },
     ])
-    //.sort({ createdAt: "desc" })
-    // .skip((page - 1) * items)
-    // .limit(items);
+    .sort({ createdAt: "desc" })
+    .skip((page - 1) * items)
+    .limit(items);
 
   const count = await Chat.find().countDocuments();
 
@@ -83,7 +83,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
     };
   });
 
-  return { chats: chatsWithTotalTokens.sort((a,b) =>  b.updatedAt - a.updatedAt).slice(items * (page - 1), items * page), count };
+  return { chats: chatsWithTotalTokens, count };
 };
 
 const getChatByExternalId = async (externalId) => {
