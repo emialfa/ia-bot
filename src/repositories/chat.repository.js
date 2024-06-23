@@ -1,6 +1,14 @@
 const Chat = require("../models/Chat.model");
 const Message = require("../models/Message.model");
 
+// (async () => {
+//   // borrar todos los chats y mensajes que fueron creados antes del 7 de junio de 2024 y devuelvo en consola la cantidad de chats y mensajes eliminados
+//   const chats = await Chat.deleteMany({ createdAt: { $lt: new Date("2024-06-07") } });
+//   console.log(chats.deletedCount, "chats eliminados");
+//   const messages = await Message.deleteMany({ createdAt: { $lt: new Date("2024-06-07") } });
+//   console.log(messages.deletedCount, "mensajes eliminados");
+// })()
+
 const getChats = async (page, items, search) => {
   const query = {};
   if (search) {
