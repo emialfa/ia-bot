@@ -110,15 +110,19 @@ const initializeIO = async (io) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       questionaryLogs("Questionary started", socket.id, phoneNumber, clientIP);
-      const phoneNumberValidated = phoneNumber?.length && phoneNumber !== 'josebaTesting'
-        ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
-            phoneNumber
-          )
-        : true;
+      const phoneNumberValidated =
+        phoneNumber?.length && phoneNumber !== "josebaTesting"
+          ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+              phoneNumber
+            )
+          : true;
 
-      const invalidIp = phoneNumber !== 'josebaTesting' && userIps.find(
-        (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
-      );
+      const invalidIp =
+        phoneNumber !== "josebaTesting" &&
+        userIps.find(
+          (userIp) =>
+            userIp.ip === clientIP && userIp.expirationDate > new Date()
+        );
 
       if (!phoneNumberValidated || invalidIp) {
         if (!phoneNumberValidated)
@@ -143,6 +147,7 @@ const initializeIO = async (io) => {
         phoneNumber: phoneNumber || "",
         questions: [],
         questionary: questionaryId,
+        type: "questionary"
       });
 
       socket.emit("server socket id", socket.id);
@@ -152,6 +157,21 @@ const initializeIO = async (io) => {
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
       );
+
+      if (questionaryResponse.type === "contact") {
+        questionaryLogs(
+          "Questionary started",
+          socket.id,
+          questionaryResponse.phoneNumber,
+          ""
+        );
+        if (questionaryIndex !== -1) {
+          questionaries[questionaryIndex].name = questionaryResponse.name;
+          questionaries[questionaryIndex].phoneNumber =
+            questionaryResponse.phone;
+        }
+        return;
+      }
 
       questionaryLogs(
         `${questionaryResponse?.backupQuestion?.label}: ${
@@ -269,15 +289,32 @@ const initializeIO = async (io) => {
         phoneNumber: phoneNumber || "",
         questions: [],
         questionary: questionaryId,
+        type: "static questionary"
       });
 
       socket.emit("static questionary server socket id", socket.id);
     });
+    
 
     socket.on("static questionary response", (questionaryResponse) => {
       const questionaryIndex = questionaries.findIndex(
         (q) => q.userId === socket.id
       );
+
+      if (questionaryResponse.type === "contact") {
+        questionaryLogs(
+          "Questionary started",
+          socket.id,
+          questionaryResponse.phoneNumber,
+          ""
+        );
+        if (questionaryIndex !== -1) {
+          questionaries[questionaryIndex].name = questionaryResponse.name;
+          questionaries[questionaryIndex].phoneNumber =
+            questionaryResponse.phone;
+        }
+        return;
+      }
 
       questionaryLogs(
         `${questionaryResponse?.backupQuestion?.label}: ${
@@ -298,6 +335,7 @@ const initializeIO = async (io) => {
         questionaries?.[questionaryIndex]?.phoneNumber,
         ""
       );
+
       socket.emit(
         "static questionary response received",
         "static questionary response received"
@@ -625,13 +663,13 @@ const initializeIO = async (io) => {
       if (questionaryIndex !== -1) {
         userQuestionaryInteractor.createUserQuestionaryAndChat(
           questionaries[questionaryIndex],
-          "static questionary"
+          questionaries[questionaryIndex].type || "static questionary"
         );
 
-        userIps.push({
-          ip: clientIP,
-          expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
-        });
+        // userIps.push({
+        //   ip: clientIP,
+        //   expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
+        // });
 
         questionaries.splice(questionaryIndex, 1);
       }

@@ -69,7 +69,7 @@ const validateUserQuestionaryWithPhoneNumber = async (phoneNumber) => {
       phoneNumber,
     });
 
-    return !userQuestionary;
+    return !userQuestionary?.generatedPrompt;
   } catch (err) {
     return false;
   }

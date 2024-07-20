@@ -6,6 +6,7 @@ const UserQuestionary = new Schema(
   {
     userId: String,
     phoneNumber: String,
+    name: String,
     languageLocale: String,
     questionary: {
       type: Schema.Types.ObjectId,
