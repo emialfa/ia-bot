@@ -13,6 +13,17 @@ const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
 
+// (async () => {
+//   const firstResponse = await openaiService.generateMessage(
+//     openai,
+//     'gpt-4o',
+//     0.3,
+//     [{role: 'system', content: 'Hola, ¿cómo estás?'}]
+//   );
+//   console.log('firstResponse', firstResponse);
+//   console.log('firstResponse', firstResponse?.data?.choices[0].message["content"]);
+// })()
+
 const generateFirstSystemAndAssistantMessage = async (
   bot,
   userId,
@@ -147,7 +158,7 @@ const initializeIO = async (io) => {
         phoneNumber: phoneNumber || "",
         questions: [],
         questionary: questionaryId,
-        type: "questionary"
+        type: "questionary",
       });
 
       socket.emit("server socket id", socket.id);
@@ -229,6 +240,7 @@ const initializeIO = async (io) => {
           ip: clientIP,
           expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
         });
+        console.log('CREATING USER QUESTIONARY')
         const questionaryCreated =
           await userQuestionaryInteractor.createUserQuestionary(
             questionaries[questionaryIndex]
@@ -289,12 +301,11 @@ const initializeIO = async (io) => {
         phoneNumber: phoneNumber || "",
         questions: [],
         questionary: questionaryId,
-        type: "static questionary"
+        type: "static questionary",
       });
 
       socket.emit("static questionary server socket id", socket.id);
     });
-    
 
     socket.on("static questionary response", (questionaryResponse) => {
       const questionaryIndex = questionaries.findIndex(
@@ -470,52 +481,77 @@ const initializeIO = async (io) => {
             formId,
             userQuestionary
           );
-        if (!firstSystemAndAssistantMessage)
-          throw new Error("Failed to generate message with openai service");
-        const {
-          firstSystemMessage,
-          firstAssistantMessage,
-          firstMessageTokens,
-        } = firstSystemAndAssistantMessage;
-        conversations.push({
-          userId: socket.id,
-          botName,
-          lastMessages: [firstSystemMessage, firstAssistantMessage],
-        });
-        socket.emit("message", {
-          body: firstAssistantMessage.content,
-        });
-        chatInteractor.createChat(
-          {
+        if (!firstSystemAndAssistantMessage) {
+          socket.emit("message", {
+            body: "An error has occurred. Please try again later.",
+          });
+          chatInteractor.createChat(
+            {
+              chatId: socket.id,
+              firstName: "User[web]",
+              model: chatBot.model,
+              botName: chatBot.name,
+            },
+            formId,
+            '',
+            ''
+          );
+          await messageInteractor.createMessage({
             chatId: socket.id,
-            firstName: "User[web]",
-            model: chatBot.model,
             botName: chatBot.name,
-          },
-          formId,
-          firstSystemMessage.content,
-          firstAssistantMessage.content
-        );
+            data: "An error has occurred. Please try again later.",
+            role: "assistant",
+            promptToken: 0,
+            tokens: 0,
+            totalTokens: 0,
+          });
+          // throw new Error("Failed to generate message with openai service");
+        } else {
+          const {
+            firstSystemMessage,
+            firstAssistantMessage,
+            firstMessageTokens,
+          } = firstSystemAndAssistantMessage;
+          conversations.push({
+            userId: socket.id,
+            botName,
+            lastMessages: [firstSystemMessage, firstAssistantMessage],
+          });
+          socket.emit("message", {
+            body: firstAssistantMessage.content,
+          });
+          chatInteractor.createChat(
+            {
+              chatId: socket.id,
+              firstName: "User[web]",
+              model: chatBot.model,
+              botName: chatBot.name,
+            },
+            formId,
+            firstSystemMessage.content,
+            firstAssistantMessage.content
+          );
 
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: "Initializing chat...",
-          role: "system",
-          promptToken: firstMessageTokens.prompt_tokens,
-          tokens: firstMessageTokens.prompt_tokens,
-          totalTokens: firstMessageTokens.prompt_tokens,
-        });
+          await messageInteractor.createMessage({
+            chatId: socket.id,
+            botName: chatBot.name,
+            data: "Initializing chat...",
+            role: "system",
+            promptToken: firstMessageTokens.prompt_tokens,
+            tokens: firstMessageTokens.prompt_tokens,
+            totalTokens: firstMessageTokens.prompt_tokens,
+          });
 
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: firstAssistantMessage.content,
-          role: "assistant",
-          promptToken: firstMessageTokens.prompt_tokens,
-          tokens: firstMessageTokens.completion_tokens,
-          totalTokens: firstMessageTokens.total_tokens,
-        });
+          await messageInteractor.createMessage({
+            chatId: socket.id,
+            botName: chatBot.name,
+            data: firstAssistantMessage.content,
+            role: "assistant",
+            promptToken: firstMessageTokens.prompt_tokens,
+            tokens: firstMessageTokens.completion_tokens,
+            totalTokens: firstMessageTokens.total_tokens,
+          });
+        }
       } catch (error) {
         console.error(error);
         socket.emit("message", {
