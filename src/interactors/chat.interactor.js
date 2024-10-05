@@ -67,6 +67,14 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
       totalTokens: 0,
     });
 
+    if (chat.userQuestionary?.calculatedClinicsLogs?.length) questionaryMessages.push({
+      role: "calculateClinicLogs",
+      data: JSON.stringify(chat.userQuestionary?.calculatedClinicsLogs) || "",
+      createdAt: chat?.userQuestionary?.updatedAt,
+      tokens: 0,
+      totalTokens: 0,
+    });
+
     const messages = await messageRepository.getMessages({
       ...(chatId ? { chatId: chatId } : { chatExternalId: externalId }),
       botName,
@@ -84,7 +92,7 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
   }
 };
 
-const createChat = async (chat, userId, questionaryPrompt, responsePrompt) => {
+const createChat = async (chat, userId, questionaryPrompt, responsePrompt, calculatedClinics, calculatedClinicsLogs) => {
   try {
     const { externalId, chatId } = chat;
     let userQuestionary;
@@ -98,10 +106,12 @@ const createChat = async (chat, userId, questionaryPrompt, responsePrompt) => {
       userQuestionary = await userQuestionaryRepository.getUserQuestionary({
         userId,
       });
-    if (userId && questionaryPrompt)
+    if (userId && (questionaryPrompt || calculatedClinics))
       await userQuestionaryRepository.updateUserQuestionaryByUserId(userId, {
         generatedPrompt: questionaryPrompt,
         firstResponsePrompt: responsePrompt,
+        calculatedClinics: calculatedClinics,
+        calculatedClinicsLogs: calculatedClinicsLogs,
       });
 
     return await chatRepository.createChat({

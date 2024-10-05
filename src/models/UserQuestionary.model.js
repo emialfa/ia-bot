@@ -20,6 +20,7 @@ const UserQuestionary = new Schema(
         },
         optionKey: String,
         optionValue: String,
+        locationKey: String,
         backupQuestion: {
             slug: String,
             label: String,
@@ -41,6 +42,8 @@ const UserQuestionary = new Schema(
     ],
     generatedPrompt: String,
     firstResponsePrompt: String,
+    calculatedClinics: String,
+    calculatedClinicsLogs: [String],
   },
   {
     timestamps: true,

@@ -9,10 +9,14 @@ const chatInteractor = require("./interactors/chat.interactor");
 const messageInteractor = require("./interactors/message.interactor");
 const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
+const clinicRepository = require("./repositories/clinic.repository");
+
 const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
 const languages = require("./utils/languages");
-
+const locationList = require("./utils/locationList");
+const clinicList = require("./utils/clinicList");
+const calculateClinics = require("./utils/calculateClinics");
 // (async () => {
 //   const firstResponse = await openaiService.generateMessage(
 //     openai,
@@ -121,37 +125,37 @@ const initializeIO = async (io) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       questionaryLogs("Questionary started", socket.id, phoneNumber, clientIP);
-      const phoneNumberValidated =
-        phoneNumber?.length && phoneNumber !== "josebaTesting"
-          ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
-              phoneNumber
-            )
-          : true;
+      // const phoneNumberValidated =
+      //   phoneNumber?.length && phoneNumber !== "josebaTesting"
+      //     ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+      //         phoneNumber
+      //       )
+      //     : true;
 
-      const invalidIp =
-        phoneNumber !== "josebaTesting" &&
-        userIps.find(
-          (userIp) =>
-            userIp.ip === clientIP && userIp.expirationDate > new Date()
-        );
+      // const invalidIp =
+      //   phoneNumber !== "josebaTesting" &&
+      //   userIps.find(
+      //     (userIp) =>
+      //       userIp.ip === clientIP && userIp.expirationDate > new Date()
+      //   );
 
-      if (!phoneNumberValidated || invalidIp) {
-        if (!phoneNumberValidated)
-          questionaryLogs(
-            "phone number already used",
-            socket.id,
-            phoneNumber,
-            clientIP
-          );
-        if (invalidIp)
-          questionaryLogs(
-            "ip already used today",
-            socket.id,
-            phoneNumber,
-            clientIP
-          );
-        return socket.emit("phone number already used", phoneNumber);
-      }
+      // if (!phoneNumberValidated || invalidIp) {
+      //   if (!phoneNumberValidated)
+      //     questionaryLogs(
+      //       "phone number already used",
+      //       socket.id,
+      //       phoneNumber,
+      //       clientIP
+      //     );
+      //   if (invalidIp)
+      //     questionaryLogs(
+      //       "ip already used today",
+      //       socket.id,
+      //       phoneNumber,
+      //       clientIP
+      //     );
+      //   return socket.emit("phone number already used", phoneNumber);
+      // }
 
       questionaries.push({
         userId: socket.id,
@@ -240,7 +244,7 @@ const initializeIO = async (io) => {
           ip: clientIP,
           expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
         });
-        console.log('CREATING USER QUESTIONARY')
+        console.log("CREATING USER QUESTIONARY");
         const questionaryCreated =
           await userQuestionaryInteractor.createUserQuestionary(
             questionaries[questionaryIndex]
@@ -435,55 +439,91 @@ const initializeIO = async (io) => {
         const userIpIndex = userIps.findIndex(
           (userIp) => userIp.ip === clientIP
         );
-        if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
+        // if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
 
         const userQuestionary =
           await userQuestionaryInteractor.getUserQuestionary(formId);
         if (!userQuestionary || chatBot.type !== "webform") throw new Error();
 
-        if (userQuestionary?.generatedPrompt) {
-          if (userQuestionary?.firstResponsePrompt) {
-            clinicsLogs(
-              "Prompt already generated, showing first response of prompt",
-              userQuestionary.userId,
-              undefined,
-              clientIP
-            );
-            const conversationIndex = conversations.findIndex(
-              (c) => c.userId === userQuestionary.userId
-            );
-            if (conversationIndex === -1)
-              conversations.push({
-                userId: userQuestionary.userId,
-                botName: userQuestionary.bot.name,
-                lastMessages: [
-                  userQuestionary.generatedPrompt,
-                  userQuestionary.firstResponsePrompt,
-                ],
-              });
-            return socket.emit("message", {
-              body: userQuestionary?.firstResponsePrompt,
-            });
-          }
-          clinicsLogs(
-            "Prompt already generated, showing error message",
-            socket.id,
-            undefined,
-            clientIP
-          );
+        // if (userQuestionary?.generatedPrompt) {
+        //   if (userQuestionary?.firstResponsePrompt) {
+        //     clinicsLogs(
+        //       "Prompt already generated, showing first response of prompt",
+        //       userQuestionary.userId,
+        //       undefined,
+        //       clientIP
+        //     );
+        //     const conversationIndex = conversations.findIndex(
+        //       (c) => c.userId === userQuestionary.userId
+        //     );
+        //     if (conversationIndex === -1)
+        //       conversations.push({
+        //         userId: userQuestionary.userId,
+        //         botName: userQuestionary.bot.name,
+        //         lastMessages: [
+        //           userQuestionary.generatedPrompt,
+        //           userQuestionary.firstResponsePrompt,
+        //         ],
+        //       });
+        //     return socket.emit("message", {
+        //       body: userQuestionary?.firstResponsePrompt,
+        //     });
+        //   }
+        //   clinicsLogs(
+        //     "Prompt already generated, showing error message",
+        //     socket.id,
+        //     undefined,
+        //     clientIP
+        //   );
 
-          return socket.emit("phone number already used", "");
-        }
+        //   return socket.emit("phone number already used", "");
+        // }
 
-        const firstSystemAndAssistantMessage =
-          await generateFirstSystemAndAssistantMessage(
-            chatBot,
-            formId,
-            userQuestionary
-          );
-        if (!firstSystemAndAssistantMessage) {
+        // ***** calculate clinics and save in chat ******
+        // location: { lat: 40.4165, lon: -3.70256, pais: "España" }
+        // criteria: { key: "a", label: "Calidad y servicio" }
+        // distance: "a"
+        if (formId && userQuestionary && userQuestionary?.calculatedClinics) {
           socket.emit("message", {
-            body: "An error has occurred. Please try again later.",
+            body: userQuestionary?.calculatedClinics,
+          });
+        } else if (formId && userQuestionary) {
+          let userAnswers = {};
+          userQuestionary.questions.forEach((q) => {
+            if (q.question.slug === "doctor_selection_criteria")
+              userAnswers.criteria = {
+                key: q.optionKey,
+                label: q.question.options.find((o) => o.key === q.optionKey)
+                  ?.label,
+              };
+            else if (q.question.slug === "how_far_would_you_travel")
+              userAnswers.distance = q.optionKey;
+            else if (q.question.slug === "residential_zone") {
+              const zone = locationList.zones.find(
+                (l) => l.key === q.optionKey
+              );
+              const location = zone.locations.find(
+                (l) => l.key === q.locationKey
+              );
+              userAnswers.location = {
+                lat: Number(location.coordinates.split(",")[0]),
+                lon: Number(location.coordinates.split(",")[1]),
+                pais: location.name,
+              };
+            }
+          });
+
+          const { clinics } = await clinicRepository.getClinics({}, 1, 9999)
+          let calculatedClinics = calculateClinics(userAnswers, clinics, userQuestionary.languageLocale?.toLowerCase() || "es");
+          console.log("CalculatedClinics", calculatedClinics.response);
+          clinicsLogs(`CalculatedClinics: ${calculatedClinics.response}`, socket.id, undefined, clientIP)
+          conversations.push({
+            userId: socket.id,
+            botName,
+            lastMessages: [JSON.stringify(calculatedClinics.response)],
+          });
+          socket.emit("message", {
+            body: JSON.stringify(calculatedClinics.response),
           });
           chatInteractor.createChat(
             {
@@ -493,8 +533,45 @@ const initializeIO = async (io) => {
               botName: chatBot.name,
             },
             formId,
-            '',
-            ''
+            undefined,
+            undefined,
+            JSON.stringify(calculatedClinics.response),
+            calculatedClinics.logs,
+          );
+          await messageInteractor.createMessage({
+            chatId: socket.id,
+            botName: chatBot.name,
+            data: "Initializing chat...",
+            role: "system",
+            promptToken: 0,
+            tokens: 0,
+            totalTokens: 0,
+          });
+
+          await messageInteractor.createMessage({
+            chatId: socket.id,
+            botName: chatBot.name,
+            data: JSON.stringify(calculatedClinics.response),
+            role: "assistant",
+            promptToken: 0,
+            tokens: 0,
+            totalTokens: 0,
+          });
+        } else {
+          socket.emit("message", {
+            body: "An error has occurred. Please try again later.",
+          });
+
+          chatInteractor.createChat(
+            {
+              chatId: socket.id,
+              firstName: "User[web]",
+              model: chatBot.model,
+              botName: chatBot.name,
+            },
+            formId,
+            "",
+            ""
           );
           await messageInteractor.createMessage({
             chatId: socket.id,
@@ -505,53 +582,88 @@ const initializeIO = async (io) => {
             tokens: 0,
             totalTokens: 0,
           });
-          // throw new Error("Failed to generate message with openai service");
-        } else {
-          const {
-            firstSystemMessage,
-            firstAssistantMessage,
-            firstMessageTokens,
-          } = firstSystemAndAssistantMessage;
-          conversations.push({
-            userId: socket.id,
-            botName,
-            lastMessages: [firstSystemMessage, firstAssistantMessage],
-          });
-          socket.emit("message", {
-            body: firstAssistantMessage.content,
-          });
-          chatInteractor.createChat(
-            {
-              chatId: socket.id,
-              firstName: "User[web]",
-              model: chatBot.model,
-              botName: chatBot.name,
-            },
-            formId,
-            firstSystemMessage.content,
-            firstAssistantMessage.content
-          );
-
-          await messageInteractor.createMessage({
-            chatId: socket.id,
-            botName: chatBot.name,
-            data: "Initializing chat...",
-            role: "system",
-            promptToken: firstMessageTokens.prompt_tokens,
-            tokens: firstMessageTokens.prompt_tokens,
-            totalTokens: firstMessageTokens.prompt_tokens,
-          });
-
-          await messageInteractor.createMessage({
-            chatId: socket.id,
-            botName: chatBot.name,
-            data: firstAssistantMessage.content,
-            role: "assistant",
-            promptToken: firstMessageTokens.prompt_tokens,
-            tokens: firstMessageTokens.completion_tokens,
-            totalTokens: firstMessageTokens.total_tokens,
-          });
         }
+
+        // ************************************************
+
+        // const firstSystemAndAssistantMessage =
+        //   await generateFirstSystemAndAssistantMessage(
+        //     chatBot,
+        //     formId,
+        //     userQuestionary
+        //   );
+        // if (!firstSystemAndAssistantMessage) {
+        //   socket.emit("message", {
+        //     body: "An error has occurred. Please try again later.",
+        //   });
+        //   chatInteractor.createChat(
+        //     {
+        //       chatId: socket.id,
+        //       firstName: "User[web]",
+        //       model: chatBot.model,
+        //       botName: chatBot.name,
+        //     },
+        //     formId,
+        //     '',
+        //     ''
+        //   );
+        //   await messageInteractor.createMessage({
+        //     chatId: socket.id,
+        //     botName: chatBot.name,
+        //     data: "An error has occurred. Please try again later.",
+        //     role: "assistant",
+        //     promptToken: 0,
+        //     tokens: 0,
+        //     totalTokens: 0,
+        //   });
+        //   // throw new Error("Failed to generate message with openai service");
+        // } else {
+        //   const {
+        //     firstSystemMessage,
+        //     firstAssistantMessage,
+        //     firstMessageTokens,
+        //   } = firstSystemAndAssistantMessage;
+        //   conversations.push({
+        //     userId: socket.id,
+        //     botName,
+        //     lastMessages: [firstSystemMessage, firstAssistantMessage],
+        //   });
+        //   socket.emit("message", {
+        //     body: firstAssistantMessage.content,
+        //   });
+        //   chatInteractor.createChat(
+        //     {
+        //       chatId: socket.id,
+        //       firstName: "User[web]",
+        //       model: chatBot.model,
+        //       botName: chatBot.name,
+        //     },
+        //     formId,
+        //     firstSystemMessage.content,
+        //     firstAssistantMessage.content,
+        //     undefined,
+        //   );
+
+        //   await messageInteractor.createMessage({
+        //     chatId: socket.id,
+        //     botName: chatBot.name,
+        //     data: "Initializing chat...",
+        //     role: "system",
+        //     promptToken: firstMessageTokens.prompt_tokens,
+        //     tokens: firstMessageTokens.prompt_tokens,
+        //     totalTokens: firstMessageTokens.prompt_tokens,
+        //   });
+
+        //   await messageInteractor.createMessage({
+        //     chatId: socket.id,
+        //     botName: chatBot.name,
+        //     data: firstAssistantMessage.content,
+        //     role: "assistant",
+        //     promptToken: firstMessageTokens.prompt_tokens,
+        //     tokens: firstMessageTokens.completion_tokens,
+        //     totalTokens: firstMessageTokens.total_tokens,
+        //   });
+        // }
       } catch (error) {
         console.error(error);
         socket.emit("message", {
