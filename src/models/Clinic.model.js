@@ -10,7 +10,7 @@ const Clinic = new Schema({
   descripcion: Object,
   precio: String,
   foliculos: Object,
-  Ubicación: String,
+  ubicacion: String,
   imagenurl: String,
   url: Object,
   qualifications: {

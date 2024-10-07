@@ -13,13 +13,17 @@
       "es": "Una opción excelente en Estambul, con una gran relación calidad-precio. Impresionantes testimonios en Instagram. Ofrecen hasta 5000 folículos por sesión y también realizan otros tratamientos estéticos y dentales. Ofrecen paquete completo con hotel, transporte, 2 PRPs, células madre, sedación total y productos postoperatorios.",
       "fr": "Une excellente option à Istanbul, offrant un excellent rapport qualité-prix. Témoignages impressionnants sur Instagram. Ils proposent jusqu'à 5000 follicules par session et réalisent également d'autres traitements esthétiques et dentaires. Ils offrent un package complet avec hôtel, transport, 2 PRPs, cellules souches, sédation complète et produits post-opératoires."
     },
-    "precio": "1400€",
     "foliculos": {
       "en": "Up to 5000 follicles per session",
       "es": "Hasta 5000 folículos por sesión",
       "fr": "Jusqu'à 5000 follicules par session"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 1400,
+      "hasta": 1400
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4Wypz9wpS2M-Me42JuJBk4tDcTQsjjbkMTQPTfawmDPFIfnddwRSC8X1kVfLX1wFLFpo&usqp=CAU",
     "url": {
       "en": "https://www.instagram.com/estemoon_clinic/?hl=en",
@@ -46,13 +50,17 @@
       "es": "Conocida por su alta calidad a un precio asequible, ideal para alopecias avanzadas. Utilizan zonas donantes del cuerpo (como barba y pecho) con la técnica BHT. Ofrecen hasta 7000 folículos en 2 días apoyados por las zonas donantes. Utilizan la técnica mixta FUE DHI y han sido galardonados con el premio European Awards 2023 por su innovación.",
       "fr": "Connue pour sa haute qualité à un prix abordable, idéale pour les cas d'alopécie avancée. Ils utilisent des zones donneuses du corps (comme la barbe et la poitrine) avec la technique BHT. Ils offrent jusqu'à 7000 follicules en 2 jours, soutenus par des zones donneuses. Ils utilisent la technique mixte FUE DHI et ont été récompensés par les European Awards 2023 pour leur innovation."
     },
-    "precio": "1900€",
     "foliculos": {
       "en": "Up to 7000 follicles in 2 days",
       "es": "Hasta 7000 folículos en 2 días",
       "fr": "Jusqu'à 7000 follicules en 2 jours"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 1900,
+      "hasta": 1900
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://huelvaya.es/wp-content/uploads/2024/01/capilar.jpg",
     "url": {
       "en": "https://www.instagram.com/istanbulvita/?hl=en",
@@ -79,13 +87,17 @@
       "es": "Gran calidad precio y también operaciones estéticas y de dientes. El quirófano privado más grande de Europa con 65 quirófanos. Hasta 4500 folículos por sesión. Muchísimos testimonios en Instagram.",
       "fr": "Un excellent rapport qualité-prix et effectue également des opérations esthétiques et dentaires. Le plus grand bloc opératoire privé d'Europe avec 65 salles d'opération. Jusqu'à 4500 follicules par session. De nombreux témoignages sur Instagram."
     },
-    "precio": "1400€",
     "foliculos": {
       "en": "Up to 4500 follicles per session",
       "es": "Hasta 4500 folículos por sesión",
       "fr": "Jusqu'à 4500 follicules par session"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 1400,
+      "hasta": 1400
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://img.bookimed.com/clinic/6398511959301.jpeg",
     "url": {
       "en": "https://www.instagram.com/naturalclinicen/?hl=en",
@@ -112,13 +124,17 @@
       "es": "Reconocido por sus megasesiones de hasta 5000 folículos con la técnica DHI. Es uno de los pocos doctores que usa un implanter creado por él mismo, lo que garantiza mayor densidad y un aspecto natural. Muy conocido en medios turcos.",
       "fr": "Connu pour ses mégasessions de jusqu'à 5000 follicules avec la technique DHI. Il est l'un des rares médecins à utiliser un implanteur qu'il a lui-même créé, garantissant une densité accrue et un aspect naturel. Très connu dans les médias turcs."
     },
-    "precio": "3200€",
     "foliculos": {
       "en": "Up to 5000 follicles per session",
       "es": "Hasta 5000 folículos por sesión",
       "fr": "Jusqu'à 5000 follicules par session"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 3200,
+      "hasta": 3200
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://www.tenerpelo.com/wp-content/uploads/2021/11/Dr-Resul-Yaman-Clinic.jpg",
     "url": {
       "en": "https://www.youtube.com/@DrResulYaman/videos",
@@ -145,13 +161,17 @@
       "es": "Ganador del premio a la mejor clínica europea en 2020 y 2021. Tiene una gran reputación a nivel mundial y ofrece hasta 6000 folículos por sesión.",
       "fr": "Gagnante du prix de la meilleure clinique européenne en 2020 et 2021. Elle jouit d'une excellente réputation mondiale et offre jusqu'à 6000 follicules par session."
     },
-    "precio": "3500€",
     "foliculos": {
       "en": "Up to 6000 follicles per session",
       "es": "Hasta 6000 folículos por sesión",
       "fr": "Jusqu'à 6000 follicules par session"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 3500,
+      "hasta": 3500
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://www.theeuropeanawards.eu/fileuploads/premios/vera-clinic.1_16383211261.jpg",
     "url": {
       "en": "https://www.veraclinic.net/",
@@ -178,13 +198,17 @@
       "es": "Presidente de la World FUE Institute e inventor del implanter Keep usado por los mejores doctores del mundo. Ofrece hasta 5000 folículos en dos días.",
       "fr": "Président de l'Institut mondial FUE et inventeur de l'implanteur Keep utilisé par les meilleurs médecins du monde entier. Il propose jusqu'à 5000 follicules en deux jours."
     },
-    "precio": "9000€",
     "foliculos": {
       "en": "Up to 5000 follicles in two days",
       "es": "Hasta 5000 folículos en dos días",
       "fr": "Jusqu'à 5000 follicules en deux jours"
     },
-    "Ubicación": "Estambul",
+    "precio": {
+      "desde": 9000,
+      "hasta": 9000
+    },
+    "pais": "Turquía",
+    "ubicacion": "Estambul",
     "imagenurl": "https://10clinics.com/wp-content/uploads/2018/08/ASMED-Dr-Koray-erdogan-10clinics-1.jpg",
     "url": {
       "en": "http://www.hairtransplantfue.org/",
@@ -211,13 +235,17 @@
       "es": "La cadena tiene 25 años, con presencia internacional y en varias ciudades de España. Ofrecen hasta 3500 folículos por sesión, con tecnologías avanzadas como el Keep del Dr. Koray. También destacan por sus tratamientos de recuperación sin cirugía.",
       "fr": "Cette chaîne existe depuis 25 ans, avec une présence internationale et des cliniques dans plusieurs villes espagnoles. Ils proposent jusqu'à 3500 follicules par session, utilisant des technologies avancées comme le Keep du Dr. Koray. Ils sont également connus pour leurs traitements de récupération non chirurgicaux."
     },
-    "precio": "3500€",
     "foliculos": {
       "en": "Up to 3500 follicles per session",
       "es": "Hasta 3500 folículos por sesión",
       "fr": "Jusqu'à 3500 follicules par session"
     },
-    "Ubicación": "Madrid, Vigo, Barcelona, Valencia y San Sebastián",
+    "precio": {
+      "desde": 3500,
+      "hasta": 3500
+    },
+    "pais": "España",
+    "ubicacion": "Madrid, Vigo, Barcelona, Valencia y San Sebastián",
     "imagenurl": "https://cadenaser.com/resizer/v2/XSPH53FFOZALZCMP3ZETDURTCA.png",
     "url": {
       "en": "https://medihair.com/",
@@ -244,13 +272,17 @@
       "es": "Doctor y maestro de trasplantes capilares, usa sus propios instrumentos para conseguir la máxima supervivencia folicular. Impresionantes testimonios en Google con sus fotos de antes y después. Amplia biblioteca de casos.",
       "fr": "Docteur et maître des greffes capillaires, il utilise ses propres instruments pour assurer une survie maximale des follicules. Témoignages impressionnants sur Google avec des photos avant/après. Large bibliothèque de cas."
     },
-    "precio": "4000€",
     "foliculos": {
       "en": "Up to 4000 follicles per session",
       "es": "Hasta 4000 folículos por sesión",
       "fr": "Jusqu'à 4000 follicules par session"
     },
-    "Ubicación": "Barcelona",
+    "precio": {
+      "desde": 4000,
+      "hasta": 4000
+    },
+    "pais": "España",
+    "ubicacion": "Barcelona",
     "imagenurl": "https://wwizcyinlyijnzmnaxik.supabase.co/storage/v1/object/public/Clinics_images/recDyOWmYIJLAwCXx/diaporama-pictures/dr-bruno-jacobovski-barcelone-espagne.png",
     "url": {
       "en": "https://www.instagram.com/drbrunojacobovski/",
@@ -277,13 +309,17 @@
       "es": "Galardonado con el folículo de oro por la ISHRS, el Dr. Trivellini ha hecho grandes aportaciones a la técnica mundial del trasplante capilar. Entre sus innovaciones están el Mamba Punch, que reduce el trauma gracias a su succión, aumentando la supervivencia folicular, y el Long Hair FUE, un trasplante capilar de pelo largo con resultados finales a las 24 horas.",
       "fr": "Récompensé par le Follicule d'or de l'ISHRS, le Dr. Trivellini a apporté d'importantes contributions à la technique mondiale de greffe de cheveux. Parmi ses innovations figurent le Mamba Punch, qui réduit les traumatismes grâce à l'aspiration, augmentant la survie folliculaire, et le Long Hair FUE, une greffe de cheveux longs avec des résultats finaux en 24 heures."
     },
-    "precio": "de 3500€ a 9000€",
     "foliculos": {
       "en": "Up to 3500 follicles per session",
       "es": "Hasta 3500 folículos por sesión",
       "fr": "Jusqu'à 3500 follicules par session"
     },
-    "Ubicación": "Málaga",
+    "precio": {
+      "desde": 3500,
+      "hasta": 9000
+    },
+    "pais": "España",
+    "ubicacion": "Málaga",
     "imagenurl": "https://trivellinihair.es/wp-content/uploads/2023/01/DSC01009-768x1152.png",
     "url": {
       "en": "https://trivellinihair.es/",
@@ -310,13 +346,17 @@
       "es": "Uno de los médicos más premiados de España y Europa. Realiza sesiones dobles en dos días consecutivos, ofreciendo hasta 5000 folículos en dos días.",
       "fr": "L'un des médecins les plus primés d'Espagne et d'Europe. Il propose des sessions doubles sur deux jours consécutifs, offrant jusqu'à 5000 follicules en deux jours."
     },
-    "precio": "4000€ por sesión",
     "foliculos": {
       "en": "Up to 5000 follicles in two days",
       "es": "Hasta 5000 folículos en dos días",
       "fr": "Jusqu'à 5000 follicules en deux jours"
     },
-    "Ubicación": "Marbella",
+    "precio": {
+      "desde": 4000,
+      "hasta": 4000
+    },
+    "pais": "España",
+    "ubicacion": "Marbella",
     "imagenurl": "https://www.drpanno.com/wp-content/uploads/2020/12/3.jpg",
     "url": {
       "en": "http://www.drpanno.com",
@@ -343,13 +383,17 @@
       "es": "Para muchos, la mejor doctora capilar de Andalucía. Opera junto con el Dr. Alcaide con gran eficacia, ofreciendo muy buena calidad por un precio medio.",
       "fr": "Pour beaucoup, la meilleure docteure capillaire d'Andalousie. Elle opère avec le Dr. Alcaide, offrant des traitements de haute qualité à un prix moyen."
     },
-    "precio": "4500€",
     "foliculos": {
       "en": "Up to 4000 follicles per session",
       "es": "Hasta 4000 folículos por sesión",
       "fr": "Jusqu'à 4000 follicules par session"
     },
-    "Ubicación": "Málaga y Oporto",
+    "precio": {
+      "desde": 4500,
+      "hasta": 4500
+    },
+    "pais": "España, Portugal",
+    "ubicacion": "Málaga y Oporto",
     "imagenurl": "https://www.implantecapilarmalaga.com/wp-content/uploads/2022/04/DraMeyer-MeyeryAlcaide.jpg",
     "url": {
       "en": "https://www.implantecapilarmalaga.com/",
@@ -376,13 +420,17 @@
       "es": "Una clínica de vanguardia en el corazón de Londres. Especializada en técnicas avanzadas de trasplante capilar como FUE y DHI. Ofrece hasta 4000 folículos por sesión y cuenta con testimonios destacados de clientes satisfechos.",
       "fr": "Une clinique de pointe au cœur de Londres. Spécialisée dans les techniques de greffe capillaire avancées comme FUE et DHI. Elle propose jusqu'à 4000 follicules par session et a des témoignages remarquables de clients satisfaits."
     },
-    "precio": "8000€",
     "foliculos": {
       "en": "Up to 4000 follicles per session",
       "es": "Hasta 4000 folículos por sesión",
       "fr": "Jusqu'à 4000 follicules par session"
     },
-    "Ubicación": "Londres",
+    "precio": {
+      "desde": 8000,
+      "hasta": 8000
+    },
+    "pais": "Inglaterra",
+    "ubicacion": "Londres",
     "imagenurl": "https://example.com/london_hair_restoration.jpg",
     "url": {
       "en": "https://londonhairrestoration.co.uk/",
@@ -409,13 +457,17 @@
       "es": "Conocida por ofrecer tratamientos capilares asequibles sin comprometer la calidad. Utiliza técnicas modernas y tiene un equipo médico altamente experimentado. Ofrece paquetes completos que incluyen alojamiento y transporte.",
       "fr": "Connue pour offrir des traitements capillaires abordables sans compromettre la qualité. Elle utilise des techniques modernes et dispose d'une équipe médicale très expérimentée. Propose des forfaits complets incluant l'hébergement et le transport."
     },
-    "precio": "3000€",
     "foliculos": {
       "en": "Up to 5000 follicles per session",
       "es": "Hasta 5000 folículos por sesión",
       "fr": "Jusqu'à 5000 follicules par session"
     },
-    "Ubicación": "Berlín",
+    "precio": {
+      "desde": 3000,
+      "hasta": 3000
+    },
+    "pais": "Alemania",
+    "ubicacion": "Berlín",
     "imagenurl": "https://example.com/berlin_hair_clinic.jpg",
     "url": {
       "en": "https://berlinhairclinic.de/",
@@ -442,13 +494,17 @@
       "es": "Ubicada en el centro de París, esta clínica ofrece tratamientos personalizados de trasplante capilar. Reconocida por su excelente atención al cliente y resultados naturales. Ofrece hasta 3500 folículos por sesión.",
       "fr": "Située au centre de Paris, cette clinique propose des traitements personnalisés de greffe capillaire. Réputée pour son excellent service client et ses résultats naturels. Propose jusqu'à 3500 follicules par session."
     },
-    "precio": "7000€",
     "foliculos": {
       "en": "Up to 3500 follicles per session",
       "es": "Hasta 3500 folículos por sesión",
       "fr": "Jusqu'à 3500 follicules par session"
     },
-    "Ubicación": "París",
+    "precio": {
+      "desde": 7000,
+      "hasta": 7000
+    },
+    "pais": "Francia",
+    "ubicacion": "París",
     "imagenurl": "https://example.com/paris_capillaire.jpg",
     "url": {
       "en": "https://pariscapillaire.fr/",

@@ -42,7 +42,7 @@ function pointNearClinics(userLocation, clinics) {
 
 function calculateNationalClinics(userLocation, clinics) {
   return clinics.filter((clinic) =>
-    clinic.Ubicación.toLowerCase().includes(userLocation.pais.toLowerCase())
+    clinic.pais.toLowerCase().includes(userLocation.pais.toLowerCase())
   );
 }
 
@@ -74,8 +74,17 @@ const pointCriteriaClinics = (criteria, clinics) =>
     return clinic;
   });
 
+  const pointPriceClinics = (price, clinics) => clinics.map(clinic => {
+    const clinicPrice = clinic.precio;
+    if (price.desde <= clinicPrice.hasta && price.hasta >= clinicPrice.desde) {
+      clinic.puntos = clinic.puntos ? clinic.puntos + 1 : 1;
+    };
+    return clinic;
+  })
+
 // location: { lat: 40.4165, lon: -3.70256, pais: "España" }
 // criteria: { key: "a", label: "Calidad y servicio" }
+// price: { desde: 1000, hasta: 5000 }
 // distance: "a"
 function calculateClinics(userAnswers, clinicsParam, languageCode) {
   const logs = [];
@@ -211,6 +220,18 @@ function calculateClinics(userAnswers, clinicsParam, languageCode) {
       filteredClinics.map((c) => c.nombre[languageCode]).join(", ")
     );
 
+    filteredClinics = pointPriceClinics(userAnswers.price, filteredClinics);
+    addLog(
+      `En la iteración ${
+        i + 1
+      } se asignó 1 punto a las clinicas que entran en el rango de precios seleccionado "${
+        userAnswers.price.desde
+      }€ - ${
+        userAnswers.price.hasta
+      }€": `,
+      filteredClinics.map((c) => c.nombre[languageCode]).join(", ")
+    );
+
     filteredClinics.sort((a, b) => {
       if (b.puntos !== a.puntos) {
         return b.puntos - a.puntos;
@@ -242,6 +263,7 @@ function calculateClinics(userAnswers, clinicsParam, languageCode) {
             descripcion: cur.descripcion[languageCode],
             foliculos: cur.foliculos[languageCode],
             url: cur.url[languageCode],
+            precio: cur.precio.desde === cur.precio.hasta ? `${cur.precio.desde}€` : `${cur.precio.desde}€ - ${cur.precio.hasta}€`,
           },
         }),
         {}
