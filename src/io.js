@@ -513,8 +513,8 @@ const initializeIO = async (io) => {
             }
             else if (q.question.slug === 'how_much_do_you_plan_to_invest') {
               userAnswers.price = {
-                desde: Number(q.optionValue.split("-")[0]),
-                hasta: Number(q.optionValue.split("-")[1]),
+                desde: Number(q.optionValue.split(",")[0]),
+                hasta: Number(q.optionValue.split(",")[1]),
               };
             }
           });
