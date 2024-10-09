@@ -574,7 +574,7 @@ const initializeIO = async (io) => {
               totalTokens: 0,
             });
           } catch (err) {
-            console.err(err);
+            console.log(err);
             socket.emit("message", {
               body: "An error has occurred. Please try again later.",
             });
