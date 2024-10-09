@@ -483,86 +483,123 @@ const initializeIO = async (io) => {
         // location: { lat: 40.4165, lon: -3.70256, pais: "España" }
         // criteria: { key: "a", label: "Calidad y servicio" }
         // distance: "a"
+
         if (formId && userQuestionary && userQuestionary?.calculatedClinics) {
           socket.emit("message", {
             body: userQuestionary?.calculatedClinics,
           });
         } else if (formId && userQuestionary) {
-          let userAnswers = {};
-          userQuestionary.questions.forEach((q) => {
-            if (q.question.slug === "doctor_selection_criteria")
-              userAnswers.criteria = {
-                key: q.optionKey,
-                label: q.question.options.find((o) => o.key === q.optionKey)
-                  ?.label,
-              };
-            else if (q.question.slug === "how_far_would_you_travel")
-              userAnswers.distance = q.optionKey;
-            else if (q.question.slug === "residential_zone") {
-              const zone = locationList.zones.find(
-                (l) => l.key === q.optionKey
-              );
-              const location = zone.locations.find(
-                (l) => l.key === q.locationKey
-              );
-              userAnswers.location = {
-                lat: Number(location.coordinates.split(",")[0]),
-                lon: Number(location.coordinates.split(",")[1]),
-                pais: location.name,
-              };
-            }
-            else if (q.question.slug === 'how_much_do_you_plan_to_invest') {
-              userAnswers.price = {
-                desde: Number(q.optionValue.split(",")[0]),
-                hasta: Number(q.optionValue.split(",")[1]),
-              };
-            }
-          });
+          try {
+            let userAnswers = {};
+            userQuestionary.questions.forEach((q) => {
+              if (q.question.slug === "doctor_selection_criteria")
+                userAnswers.criteria = {
+                  key: q.optionKey,
+                  label: q.question.options.find((o) => o.key === q.optionKey)
+                    ?.label,
+                };
+              else if (q.question.slug === "how_far_would_you_travel")
+                userAnswers.distance = q.optionKey;
+              else if (q.question.slug === "residential_zone") {
+                const zone = locationList.zones.find(
+                  (l) => l.key === q.optionKey
+                );
+                const location = zone.locations.find(
+                  (l) => l.key === q.locationKey
+                );
+                userAnswers.location = {
+                  lat: Number(location.coordinates.split(",")[0]),
+                  lon: Number(location.coordinates.split(",")[1]),
+                  pais: location.name,
+                };
+              } else if (q.question.slug === "how_much_do_you_plan_to_invest") {
+                userAnswers.price = {
+                  desde: Number(q.optionValue.split(",")[0]),
+                  hasta: Number(q.optionValue.split(",")[1]),
+                };
+              }
+            });
 
-          const { clinics } = await clinicRepository.getClinics({}, 1, 9999)
-          let calculatedClinics = calculateClinics(userAnswers, clinics, userQuestionary.languageLocale?.toLowerCase() || "es");
-          console.log("CalculatedClinics", calculatedClinics.response);
-          clinicsLogs(`CalculatedClinics: ${calculatedClinics.response}`, socket.id, undefined, clientIP)
-          conversations.push({
-            userId: socket.id,
-            botName,
-            lastMessages: [JSON.stringify(calculatedClinics.response)],
-          });
-          socket.emit("message", {
-            body: JSON.stringify(calculatedClinics.response),
-          });
-          chatInteractor.createChat(
-            {
+            const { clinics } = await clinicRepository.getClinics({}, 1, 9999);
+            let calculatedClinics = calculateClinics(
+              userAnswers,
+              clinics,
+              userQuestionary.languageLocale?.toLowerCase() || "es"
+            );
+            console.log("CalculatedClinics", calculatedClinics.response);
+            clinicsLogs(
+              `CalculatedClinics: ${calculatedClinics.response}`,
+              socket.id,
+              undefined,
+              clientIP
+            );
+            conversations.push({
+              userId: socket.id,
+              botName,
+              lastMessages: [JSON.stringify(calculatedClinics.response)],
+            });
+            socket.emit("message", {
+              body: JSON.stringify(calculatedClinics.response),
+            });
+            chatInteractor.createChat(
+              {
+                chatId: socket.id,
+                firstName: "User[web]",
+                model: chatBot.model,
+                botName: chatBot.name,
+              },
+              formId,
+              undefined,
+              undefined,
+              JSON.stringify(calculatedClinics.response),
+              calculatedClinics.logs
+            );
+            await messageInteractor.createMessage({
               chatId: socket.id,
-              firstName: "User[web]",
-              model: chatBot.model,
               botName: chatBot.name,
-            },
-            formId,
-            undefined,
-            undefined,
-            JSON.stringify(calculatedClinics.response),
-            calculatedClinics.logs,
-          );
-          await messageInteractor.createMessage({
-            chatId: socket.id,
-            botName: chatBot.name,
-            data: "Initializing chat...",
-            role: "system",
-            promptToken: 0,
-            tokens: 0,
-            totalTokens: 0,
-          });
+              data: "Initializing chat...",
+              role: "system",
+              promptToken: 0,
+              tokens: 0,
+              totalTokens: 0,
+            });
 
-          await messageInteractor.createMessage({
-            chatId: socket.id,
-            botName: chatBot.name,
-            data: JSON.stringify(calculatedClinics.response),
-            role: "assistant",
-            promptToken: 0,
-            tokens: 0,
-            totalTokens: 0,
-          });
+            await messageInteractor.createMessage({
+              chatId: socket.id,
+              botName: chatBot.name,
+              data: JSON.stringify(calculatedClinics.response),
+              role: "assistant",
+              promptToken: 0,
+              tokens: 0,
+              totalTokens: 0,
+            });
+          } catch (err) {
+            console.err(err);
+            socket.emit("message", {
+              body: "An error has occurred. Please try again later.",
+            });
+
+            chatInteractor.createChat(
+              {
+                chatId: socket.id,
+                firstName: "User[web]",
+                model: chatBot.model,
+                botName: chatBot.name,
+              },
+              formId,
+              "",
+              ""
+            );
+            await messageInteractor.createMessage({
+              chatId: socket.id,
+              botName: chatBot.name,
+              data: "An error has occurred. Please try again later.",
+              role: "assistant",
+              promptToken: 0,
+              tokens: 0,
+              totalTokens: 0,
+            });
+          }
         } else {
           socket.emit("message", {
             body: "An error has occurred. Please try again later.",
