@@ -501,17 +501,25 @@ const initializeIO = async (io) => {
               else if (q.question.slug === "how_far_would_you_travel")
                 userAnswers.distance = q.optionKey;
               else if (q.question.slug === "residential_zone") {
-                const zone = locationList.zones.find(
-                  (l) => l.key === q.optionKey
-                );
-                const location = zone.locations.find(
-                  (l) => l.key === q.locationKey
-                );
-                userAnswers.location = {
-                  lat: Number(location.coordinates.split(",")[0]),
-                  lon: Number(location.coordinates.split(",")[1]),
-                  pais: location.name,
-                };
+                if (q.optionKey === "d") {
+                  userAnswers.location = {
+                    lat: 39.9334,
+                    lon: 32.8597,
+                    pais: "Turquía",
+                  };
+                } else {
+                  const zone = locationList.zones.find(
+                    (l) => l.key === q.optionKey
+                  );
+                  const location = zone.locations.find(
+                    (l) => l.key === q.locationKey
+                  );
+                  userAnswers.location = {
+                    lat: Number(location.coordinates.split(",")[0]),
+                    lon: Number(location.coordinates.split(",")[1]),
+                    pais: location.name,
+                  }; 
+                }
               } else if (q.question.slug === "how_much_do_you_plan_to_invest") {
                 userAnswers.price = {
                   desde: Number(q.optionValue.split(",")[0]),
