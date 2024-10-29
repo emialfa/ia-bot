@@ -4,6 +4,64 @@ const userQuestionaryRepository = require("../repositories/userQuestionary.repos
 
 const { formatResponse } = require("../utils/formatResponse.js");
 
+getImageByQuestionSlugAndKey = (slug, key) => {
+  switch (slug) {
+    case "alopecia_degree":
+      switch (key) {
+        case "a":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1719166039/1-a_kpgnbo.png";
+        case "b":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1719166825/1_-_c_cqijfu.png";
+        case "c":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1719166825/1-b_gfbich.png";
+        case "d":
+          return "";
+      }
+    case "how_far_would_you_travel":
+      switch (key) {
+        case "a":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838909/Up_to_20_km_cvswci.svg";
+        case "b":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838909/Up_to_100_km_iiqwwk.svg";
+        case "c":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1718590862/abroad_joqsch.svg";
+      }
+    case "residential_zone":
+      switch (key) {
+        case "a":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838912/Spain_axbfsx.svg";
+        case "b":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838869/Flag_USA_hvwwuu.svg";
+        case "c":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838869/Flag_Europe_fa3pxg.svg";
+        case "d":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838869/Flag_Other_zmykkx.svg";
+      }
+    case "hair_transplant_desired_date":
+      switch (key) {
+        case "a":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838602/As_soon_as_possible_pbz1a3.svg";
+        case "b":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838870/In_the_next_six_month_ynbtue.svg";
+        case "c":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838870/I_just_want_to_inform_myself_bhqwql.svg";
+      }
+    case "method_to_contact":
+      switch (key) {
+        case "a":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1725754768/videocall_d5osh5.svg";
+        case "b":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838908/Phone_umxcsz.svg";
+        case "c":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838910/whatsapp_p2p94u.svg";
+        case "d":
+          return "https://res.cloudinary.com/drjpyco3i/image/upload/v1688838872/mail_lncha8.svg";
+      }
+    default:
+      return "";
+  }
+};
+
 const getChats = async (page, items, search) => {
   try {
     const { chats, count } = await chatRepository.getChatsWithTotalTokens(
@@ -51,29 +109,61 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
             data:
               questionOptionSelected?.type !== "INPUT"
                 ? questionOptionSelected?.label || ""
-                : `${q.optionValue || ""}${questionOptionSelected?.label ? ` (${questionOptionSelected?.label || ""})`: ''}`,
+                : `${q.optionValue || ""}${
+                    questionOptionSelected?.label
+                      ? ` (${questionOptionSelected?.label || ""})`
+                      : ""
+                  }`,
             createdAt: chat.userQuestionary.createdAt,
             tokens: 0,
             totalTokens: 0,
+            ...([
+              "alopecia_degree",
+              "doctor_selection_criteria",
+              "how_far_would_you_travel",
+              "residential_zone",
+              "hair_transplant_desired_date",
+              "how_much_do_you_plan_to_invest",
+              "method_to_contact",
+            ].includes(q.question?.slug)
+              ? {
+                  map: {
+                    src: getImageByQuestionSlugAndKey(
+                      q.question?.slug,
+                      q.optionKey
+                    ),
+                    text:
+                      questionOptionSelected?.type !== "INPUT"
+                        ? questionOptionSelected?.label || ""
+                        : `${q.optionValue || ""}${
+                            questionOptionSelected?.label
+                              ? ` (${questionOptionSelected?.label || ""})`
+                              : ""
+                          }`,
+                  },
+                }
+              : {}),
           },
         ];
       });
 
-    if (chat.userQuestionary?.generatedPrompt) questionaryMessages.push({
-      role: "prompt",
-      data: chat.userQuestionary?.generatedPrompt || "",
-      createdAt: chat?.userQuestionary?.updatedAt,
-      tokens: 0,
-      totalTokens: 0,
-    });
+    if (chat.userQuestionary?.generatedPrompt)
+      questionaryMessages.push({
+        role: "prompt",
+        data: chat.userQuestionary?.generatedPrompt || "",
+        createdAt: chat?.userQuestionary?.updatedAt,
+        tokens: 0,
+        totalTokens: 0,
+      });
 
-    if (chat.userQuestionary?.calculatedClinicsLogs?.length) questionaryMessages.push({
-      role: "calculateClinicLogs",
-      data: JSON.stringify(chat.userQuestionary?.calculatedClinicsLogs) || "",
-      createdAt: chat?.userQuestionary?.updatedAt,
-      tokens: 0,
-      totalTokens: 0,
-    });
+    if (chat.userQuestionary?.calculatedClinicsLogs?.length)
+      questionaryMessages.push({
+        role: "calculateClinicLogs",
+        data: JSON.stringify(chat.userQuestionary?.calculatedClinicsLogs) || "",
+        createdAt: chat?.userQuestionary?.updatedAt,
+        tokens: 0,
+        totalTokens: 0,
+      });
 
     const messages = await messageRepository.getMessages({
       ...(chatId ? { chatId: chatId } : { chatExternalId: externalId }),
@@ -92,7 +182,14 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
   }
 };
 
-const createChat = async (chat, userId, questionaryPrompt, responsePrompt, calculatedClinics, calculatedClinicsLogs) => {
+const createChat = async (
+  chat,
+  userId,
+  questionaryPrompt,
+  responsePrompt,
+  calculatedClinics,
+  calculatedClinicsLogs
+) => {
   try {
     const { externalId, chatId } = chat;
     let userQuestionary;
@@ -129,9 +226,7 @@ const createStaticChat = async (chat, userId) => {
   try {
     const { chatId } = chat;
     let userQuestionary;
-    const chatFounded = await chatRepository.getChatbyChatId(
-      chatId,
-    );
+    const chatFounded = await chatRepository.getChatbyChatId(chatId);
     if (chatFounded) return;
 
     if (userId)
@@ -150,4 +245,9 @@ const createStaticChat = async (chat, userId) => {
   }
 };
 
-module.exports = { getChats, getChatByExternalIdAndBotName, createChat, createStaticChat };
+module.exports = {
+  getChats,
+  getChatByExternalIdAndBotName,
+  createChat,
+  createStaticChat,
+};

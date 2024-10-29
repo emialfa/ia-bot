@@ -51,8 +51,9 @@ const getRestClinics = (clinics, selectedClinics, languageCode) =>
     (clinic) => !selectedClinics?.some((c) => c?.nombre[languageCode] === clinic?.nombre[languageCode])
   );
 
-const pointCriteriaClinics = (criteria, clinics) =>
-  clinics.map((clinic) => {
+const pointCriteriaClinics = (criteria, clinics) => {
+  const clinicsWithPointAdded = [];
+  const pointClinics = clinics.map((clinic) => {
     let puntos = 0;
     if (criteria === "a" && clinic.cualidades.includes("calidad")) {
       puntos += 1;
@@ -70,9 +71,13 @@ const pointCriteriaClinics = (criteria, clinics) =>
       puntos += 1;
     }
 
+    if (puntos) clinicsWithPointAdded.push(clinic)
     clinic.puntos = clinic.puntos ? clinic.puntos + puntos : puntos;
     return clinic;
-  });
+  })
+
+  return { pointClinics, clinicsWithPointAdded };
+};
 
   const pointPriceClinics = (price, clinics) => clinics.map(clinic => {
     const clinicPrice = clinic.precio;
@@ -80,6 +85,11 @@ const pointCriteriaClinics = (criteria, clinics) =>
       clinic.puntos = clinic.puntos ? clinic.puntos + 1 : 1;
     };
     return clinic;
+  })
+
+  const filterPriceClinics = (price, clinics) => clinics.filter(clinic => {
+    const clinicPrice = clinic.precio;
+    return price.desde <= clinicPrice.hasta && price.hasta >= clinicPrice.desde;
   })
 
 // location: { lat: 40.4165, lon: -3.70256, pais: "España" }
@@ -91,7 +101,12 @@ function calculateClinics(userAnswers, clinicsParam, languageCode) {
   const addLog = (message, detail) => logs.push(`${message}${`${detail || ''}.`}`);
   addLog("Comienza calculo de clinicas...");
   let clinics = JSON.parse(JSON.stringify(clinicsParam));
-  const { location, criteria, distance } = userAnswers;
+  const { location, criteria, distance, price } = userAnswers;
+  // if (!criteria) criteria = { key: "a", label: "Calidad y servicio" };
+  // if (!distance) distance = "a";
+  // if (!location) location = { lat: 39.9334, lon: 32.8597, pais: "Turquía" };
+  // if (!price) price = { desde: 1000, hasta: 9000 };
+  if (!languageCode) languageCode = "es";
   let selectedClinics = [];
 
   for (let i = 0; i < 3; i++) {
@@ -210,26 +225,40 @@ function calculateClinics(userAnswers, clinicsParam, languageCode) {
       }
     }
 
-    filteredClinics = pointCriteriaClinics(criteria.key, filteredClinics);
+    const filteredClinicsByPrice = filterPriceClinics(price, filteredClinics);
+    if (filteredClinicsByPrice.length) {
+      filteredClinics = filteredClinicsByPrice;
+      addLog(
+        `En la iteración ${
+          i + 1
+        } se encontraron ${filteredClinics.length} clinicas que entran en el rango de precios seleccionado "${
+          price.desde
+        }€ - ${
+          price.hasta
+        }€": `,
+        filteredClinics.map((c) => c.nombre[languageCode]).join(", ")
+      );
+    } else {
+      addLog(
+        `En la iteración ${
+          i + 1
+        } no se encontraron clinicas que entren en el rango de precios seleccionado "${
+          price.desde
+        }€ - ${
+          price.hasta
+        }€" por lo que se desestima el filtro de precio.`
+      );
+    }
+
+    const { pointClinics, clinicsWithPointAdded } = pointCriteriaClinics(criteria.key, filteredClinics);
+    filteredClinics = pointClinics;
     addLog(
       `En la iteración ${
         i + 1
       } se asignó 1 punto a las clinicas que cumplen con el criterio "${
         criteria.label
       }": `,
-      filteredClinics.map((c) => c.nombre[languageCode]).join(", ")
-    );
-
-    filteredClinics = pointPriceClinics(userAnswers.price, filteredClinics);
-    addLog(
-      `En la iteración ${
-        i + 1
-      } se asignó 1 punto a las clinicas que entran en el rango de precios seleccionado "${
-        userAnswers.price.desde
-      }€ - ${
-        userAnswers.price.hasta
-      }€": `,
-      filteredClinics.map((c) => c.nombre[languageCode]).join(", ")
+      clinicsWithPointAdded.map((c) => `${c.nombre[languageCode]}`).join(", ")
     );
 
     filteredClinics.sort((a, b) => {

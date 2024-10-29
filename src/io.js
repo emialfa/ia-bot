@@ -583,7 +583,7 @@ const initializeIO = async (io) => {
             });
           } catch (err) {
             console.log(err);
-            socket.emit("message", {
+            socket.emit("errorMessage", {
               body: "An error has occurred. Please try again later.",
             });
 
@@ -609,7 +609,7 @@ const initializeIO = async (io) => {
             });
           }
         } else {
-          socket.emit("message", {
+          socket.emit("errorMessage", {
             body: "An error has occurred. Please try again later.",
           });
 
@@ -717,7 +717,7 @@ const initializeIO = async (io) => {
         // }
       } catch (error) {
         console.error(error);
-        socket.emit("message", {
+        socket.emit("errorMessage", {
           body: "An error has occurred. Please try again later.",
         });
       }
@@ -847,7 +847,7 @@ const initializeIO = async (io) => {
         }
       } catch (e) {
         console.log(e);
-        socket.emit("message", {
+        socket.emit("errorMessage", {
           body: "An error has occurred. Please try again later.",
         });
       }
