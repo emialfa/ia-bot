@@ -24,6 +24,16 @@ const io = new SocketServer(server, {
           origin: "http://localhost:5173",
         }
       : {},
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 3 * 60 * 1000, // 3 minutos de recuperación
+    skipMiddlewares: true,
+  },
+  pingInterval: 30000,       // Envía un ping cada 30 segundos
+  pingTimeout: 180000,        // Espera hasta 60 segundos antes de desconectar
+  reconnectionAttempts: Infinity,            // Intentar reconectar indefinidamente
+  reconnectionDelay: 1000,                   // 1 segundo para el primer intento
+  reconnectionDelayMax: 5000,                // Hasta 5 segundos para los siguientes intentos
+  randomizationFactor: 0.5,                  // Para diversificar los intentos
 });
 
 app.use(express.json());
