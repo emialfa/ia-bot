@@ -517,7 +517,7 @@ const initializeIO = async (io) => {
                   userAnswers.location = {
                     lat: Number(location.coordinates.split(",")[0]),
                     lon: Number(location.coordinates.split(",")[1]),
-                    pais: location.name,
+                    pais: q.optionKey === "a" ? zone.name : location.name,
                   }; 
                 }
               } else if (q.question.slug === "how_much_do_you_plan_to_invest") {
