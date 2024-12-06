@@ -268,7 +268,7 @@ const initializeIO = async (io) => {
 
     // ********* static questionary events *********
 
-    socket.on("static questionary", async (phoneNumber, questionaryId) => {
+    socket.on("static questionary", async (phoneNumber, questionaryId, isTrevelliniQuestionary) => {
       // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
       // if (!questionary) return socket.emit("questionary not founded", questionaryId);
       questionaryLogs("Questionary started", socket.id, phoneNumber);
@@ -305,7 +305,7 @@ const initializeIO = async (io) => {
         phoneNumber: phoneNumber || "",
         questions: [],
         questionary: questionaryId,
-        type: "static questionary",
+        type: !isTrevelliniQuestionary ? "static questionary" : "Trevellini questionary",
       });
 
       socket.emit("static questionary server socket id", socket.id);
@@ -402,8 +402,8 @@ const initializeIO = async (io) => {
             chatId: socket.id,
             firstName:
               questionaries[questionaryIndex]?.phoneNumber || "Anonymous",
-            model: "Static questionary",
-            botName: "Static questionary",
+            model: questionaries[questionaryIndex].type || "static questionary",
+            botName: questionaries[questionaryIndex].type || "static questionary",
           },
           socket.id
         );
