@@ -1,3 +1,5 @@
+const locationList = require("./locationList");
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radio de la Tierra en km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -288,6 +290,19 @@ function calculateClinics(userAnswers, clinicsParam, languageCode) {
           ...acc,
           [`clínica${i + 1}`]: {
             ...cur,
+            banderas: cur.pais.split(",").flatMap((pais) => {
+              if (!pais?.trim?.()?.length) return [];
+              let flagUrl;
+              locationList.zones.some(z => {
+                const locationFlagUrl = z.locations.find((l) => l.name.toLowerCase() === pais.trim().toLowerCase())?.flagUrl;
+                if (locationFlagUrl) {
+                  flagUrl = locationFlagUrl;
+                  return true;
+                }
+                return false;
+              });
+              return flagUrl || [];
+            }),
             nombre: cur.nombre[languageCode],
             descripcion: cur.descripcion[languageCode],
             foliculos: cur.foliculos[languageCode],
