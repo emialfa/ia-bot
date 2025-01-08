@@ -28,6 +28,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
   const query = {};
   if (search) {
     query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
       // Agregamos la búsqueda en campos de userQuestionary usando $expr y $regex
       {
         $or: [
