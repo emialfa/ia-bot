@@ -1,5 +1,6 @@
 const Chat = require("../models/Chat.model");
 const Message = require("../models/Message.model");
+const UserQuestionary = require("../models/UserQuestionary.model");
 
 // (async () => {
 //   // borrar todos los chats y mensajes que fueron creados antes del 7 de junio de 2024 y devuelvo en consola la cantidad de chats y mensajes eliminados
@@ -26,8 +27,32 @@ const getChats = async (page, items, search) => {
 const getChatsWithTotalTokens = async (page, items, search) => {
   const query = {};
   if (search) {
-    query.firstName = { $regex: `${search || ""}`, $options: "i" };
+    query.$or = [
+      // Agregamos la búsqueda en campos de userQuestionary usando $expr y $regex
+      {
+        $or: [
+          { "userQuestionary.name": { $regex: search, $options: "i" } },
+          { "userQuestionary.phoneNumber": { $regex: search, $options: "i" } }
+        ]
+      }
+    ];
   }
+
+  // Primero obtenemos los IDs de UserQuestionary que coinciden con la búsqueda
+  let userQuestionaryIds = [];
+  if (search) {
+    userQuestionaryIds = await UserQuestionary.find({
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { phoneNumber: { $regex: search, $options: "i" } }
+      ]
+    }).distinct('_id');
+
+    // Agregamos la búsqueda por userQuestionary al query
+    query.$or = query.$or || [];
+    query.$or.push({ userQuestionary: { $in: userQuestionaryIds } });
+  }
+
   const chats = await Chat.find(query)
     .populate([
       {
@@ -40,7 +65,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
     .skip((page - 1) * items)
     .limit(items);
 
-  const count = await Chat.find().countDocuments();
+  const count = await Chat.find(query).countDocuments();
 
   if (!chats.length) return { chats, count };
 
