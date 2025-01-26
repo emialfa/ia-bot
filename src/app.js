@@ -9,6 +9,7 @@ const botsRouter = require("./routes/bot.routes");
 const expressIP = require('express-ip');
 const fs = require("fs");
 const app = express();
+const rfs = require("rotating-file-stream");
 
 app.use(expressIP().getIpInfoMiddleware);
 app.set('trust proxy', true);
@@ -72,16 +73,42 @@ function ansiToHtml(logText) {
   return logText;
 }
 
-const logPath = path.join(__dirname, "access.log");
-const logStream = fs.createWriteStream(logPath, { flags: "a" });
+let logFileName = '';
+
+function getFormattedDate() {
+  return getTimestamp().replace(/[/\s,:]/g, "-");
+}
+
+function getLogFileName() {
+  logFileName = `${getFormattedDate()}.log`;
+  return logFileName;
+}
+
+const logsDir = path.join(__dirname, "logs");
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}
+
+rfs.createStream(() => getLogFileName(), {
+  interval: "15d",
+  path: logsDir,
+  initialRotation: false,
+});
+
+function prependLog(message) {
+  const logFilePath = path.join(logsDir, logFileName);
+  const logData = fs.existsSync(logFilePath) ? fs.readFileSync(logFilePath, "utf8") : "";
+  fs.writeFileSync(logFilePath, `${message}\n${logData}`, "utf8");
+}
 
 app.use(logger("dev"));
 // app.use(logger("dev", { stream: logStream }));
 const originalConsoleLog = console.log;
 console.log = (...args) => {
   const timestampedMessage = `[${getTimestamp()}] ${args.join(" ")}`;
-  originalConsoleLog(timestampedMessage); // Muestra en consola con la fecha y hora
-  logStream.write(ansiToHtml(timestampedMessage) + "\n"); // Escribe en el archivo de log con la fecha y hora
+  originalConsoleLog(timestampedMessage);
+  prependLog(ansiToHtml(timestampedMessage));
+  // logStream.write(ansiToHtml(timestampedMessage) + "\n");
 };
 
 app.use(express.json());
@@ -91,19 +118,48 @@ app.use(cors());
 app.use("/hair-questionary/api/chats", chatsRouter);
 app.use("/hair-questionary/api/bots", botsRouter);
 app.get("/hair-questionary/api/logs", (req, res) => {
-  fs.readFile(logPath, "utf8", (err, data) => {
+  fs.readdir(logsDir, (err, files) => {
     if (err) {
-      res.status(500).send("Error al cargar el archivo de logs.");
+      res.status(500).send("Error al leer el directorio de logs.");
       return;
     }
-    res.send(`
-      <html>
-        <head><title>Logs</title></head>
-        <body style="font-family: monospace; white-space: pre-wrap;">
-          ${data}
-        </body>
-      </html>
-    `);
+
+    const logFiles = files.filter(file => file.endsWith(".log"));
+
+    const selectedLog = req.query.file;
+    if (selectedLog && logFiles.includes(selectedLog)) {
+      const logPath = path.join(logsDir, selectedLog);
+      fs.readFile(logPath, "utf8", (err, data) => {
+        if (err) {
+          res.status(500).send("Error al cargar el archivo de logs.");
+          return;
+        }
+        res.send(`
+          <html>
+            <head><title>Logs - ${selectedLog}</title></head>
+            <body style="font-family: monospace;">
+              <a href="/hair-questionary/api/logs">Volver a la lista</a>
+              <h1>Logs - ${selectedLog}</h1>
+              <pre>${data}</pre>
+            </body>
+          </html>
+        `);
+      });
+    } else {
+      res.send(`
+        <html>
+          <head><title>Lista de Logs</title></head>
+          <body style="font-family: monospace;">
+            <h1>Archivos de Logs Disponibles</h1>
+            <ul>
+              ${logFiles
+                .map(file => `<li><a href="/hair-questionary/api/logs?file=${file}">${file}</a></li>`)
+                .join("")}
+            </ul>
+          </body>
+        </html>
+      `);
+    }
   });
 });
 
