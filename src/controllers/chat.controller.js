@@ -27,4 +27,14 @@ const getChatByExternalIdAndBotName = async (req, res) => {
   }
 };
 
-module.exports = { getChats, getChatByExternalIdAndBotName };
+const exportToDriveAndTrello = async (req, res) => {
+  try {
+    await chatInteractor.exportToDriveAndTrello(req.body);
+    res.send({ message: "Chat exported to Drive and Trello" });
+  }
+  catch (err) {
+    handleControllersErrors(req, res, err, "Chat can not be exported to Drive and Trello");
+  }
+}
+
+module.exports = { getChats, getChatByExternalIdAndBotName, exportToDriveAndTrello };

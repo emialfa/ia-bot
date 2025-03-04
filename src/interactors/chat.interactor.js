@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const chatRepository = require("../repositories/chat.repository");
 const messageRepository = require("../repositories/message.repository");
 const userQuestionaryRepository = require("../repositories/userQuestionary.repository");
@@ -245,9 +246,21 @@ const createStaticChat = async (chat, userId) => {
   }
 };
 
+const exportToDriveAndTrello = async (body) => {
+  try {
+    await axios.post(
+      "https://hook.eu2.make.com/d5kybicwheb8j9atg8kxnn1i8ynofnsk",
+      body
+    );
+  } catch (err) {
+    throw { message: err, status: 400, description: err.message };
+  }
+}
+
 module.exports = {
   getChats,
   getChatByExternalIdAndBotName,
   createChat,
   createStaticChat,
+  exportToDriveAndTrello,
 };
