@@ -149,6 +149,10 @@ const createChat = async (chat) => {
   return await newChat.save();
 };
 
+const deleteChats = async (chatIds) => {
+  return await Chat.deleteMany({ _id: { $in: chatIds }})
+}
+
 module.exports = {
   getChats,
   getChatbyChatId,
@@ -156,4 +160,5 @@ module.exports = {
   getChatByExternalId,
   getChatByExternalIdAndBotName,
   createChat,
+  deleteChats
 };

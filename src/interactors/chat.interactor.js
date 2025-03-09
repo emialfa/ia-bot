@@ -246,6 +246,14 @@ const createStaticChat = async (chat, userId) => {
   }
 };
 
+const deleteChats = async (chatIds) => {
+  try {
+    return await chatRepository.deleteChats(chatIds);
+  } catch (err) {
+    throw { message: err, status: 400, description: err.message };
+  }
+}
+
 const exportToDriveAndTrello = async (body) => {
   try {
     await axios.post(
@@ -262,5 +270,6 @@ module.exports = {
   getChatByExternalIdAndBotName,
   createChat,
   createStaticChat,
+  deleteChats,
   exportToDriveAndTrello,
 };

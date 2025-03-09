@@ -27,6 +27,19 @@ const getChatByExternalIdAndBotName = async (req, res) => {
   }
 };
 
+const deleteChats = async (req, res) => {
+  try {
+    if (!req.body?.chatIds)
+      return res.status(400).send({ message: req.t("content_not_empty") });
+    const chats = await chatInteractor.deleteChats(
+      req.body.chatIds,
+    );
+    return res.send(chats);
+  } catch (err) {
+    handleControllersErrors(req, res, err, "Chats can not be deleted");
+  }
+}
+
 const exportToDriveAndTrello = async (req, res) => {
   try {
     await chatInteractor.exportToDriveAndTrello(req.body);
@@ -37,4 +50,4 @@ const exportToDriveAndTrello = async (req, res) => {
   }
 }
 
-module.exports = { getChats, getChatByExternalIdAndBotName, exportToDriveAndTrello };
+module.exports = { getChats, getChatByExternalIdAndBotName, deleteChats, exportToDriveAndTrello };

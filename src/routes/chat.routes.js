@@ -9,4 +9,6 @@ router.get('/', chatController.getChats);
 
 router.post('/export-to-drive-trello', chatController.exportToDriveAndTrello);
 
+router.delete('/', chatController.deleteChats);
+
 module.exports = router;
