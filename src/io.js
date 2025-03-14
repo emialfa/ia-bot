@@ -1,5 +1,5 @@
-const conversations = [];
-const questionaries = [];
+let conversations = [];
+let questionaries = [];
 const userIps = [];
 let bots = [];
 
@@ -10,6 +10,7 @@ const messageInteractor = require("./interactors/message.interactor");
 const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
 const clinicRepository = require("./repositories/clinic.repository");
+const { enqueueCallback } = require("./utils/processQueue");
 
 const { cloneObject } = require("./utils/functions");
 const { clinicsLogs, generalLogs, questionaryLogs } = require("./utils/logs");
@@ -17,6 +18,7 @@ const languages = require("./utils/languages");
 const locationList = require("./utils/locationList");
 const clinicList = require("./utils/clinicList");
 const calculateClinics = require("./utils/calculateClinics");
+const e = require("cors");
 // (async () => {
 //   const firstResponse = await openaiService.generateMessage(
 //     openai,
@@ -27,6 +29,106 @@ const calculateClinics = require("./utils/calculateClinics");
 //   console.log('firstResponse', firstResponse);
 //   console.log('firstResponse', firstResponse?.data?.choices[0].message["content"]);
 // })()
+
+// ********* questionary cleanup process *********
+
+let cleanupIntervalQuestionaries;
+
+const updateQuestionaryActivity = async (questionaryIndex) => {
+  const questionary = questionaries[questionaryIndex];
+  if (questionary) {
+
+    if (!cleanupIntervalQuestionaries) {
+      startCleanupQuestionariesProcess();
+    }
+
+    questionary.lastActivity = Date.now();
+    return true;
+  }
+  return false;
+};
+
+const startCleanupQuestionariesProcess = () => {
+  // Verificar cada 15 minutos (puedes ajustar según necesidades)
+  cleanupIntervalQuestionaries = setInterval(cleanupInactiveQuestionaries, 5 * 60 * 1000);
+}
+
+const cleanupInactiveQuestionaries = () => {
+  const currentTime = Date.now();
+  const twoHoursInMs = 3 * 60 * 1000;
+  
+  // Filtrar los cuestionarios inactivos por más de 2 horas
+  const activeQuestionaries = questionaries.filter(questionary => {
+    const isActive = (currentTime - questionary.lastActivity) < twoHoursInMs;
+    
+    if (!isActive) {
+      console.log(`Eliminando cuestionario inactivo de la memoria: ${questionary.userId}`);
+      // Aquí puedes agregar código para respaldo o notificación si necesitas
+    }
+    
+    return isActive;
+  });
+  
+  // Actualizar la lista de cuestionarios
+  questionaries = activeQuestionaries;
+  
+  // Si no quedan cuestionarios, detener el proceso de limpieza
+  if (questionaries.length === 0) {
+    clearInterval(cleanupIntervalQuestionaries);
+    cleanupIntervalQuestionaries = null;
+  }
+}
+
+// ********* conversations cleanup process *********
+
+let cleanupIntervalConversations;
+
+const updateConversationsActivity = async (conversationIndex) => {
+  const conversation = conversations[conversationIndex];
+  if (conversation) {
+
+    if (!cleanupIntervalConversations) {
+      startCleanupConversationsProcess();
+    }
+
+    conversation.lastActivity = Date.now();
+    return true;
+  }
+  return false;
+};
+
+const startCleanupConversationsProcess = () => {
+  // Verificar cada 24 horas (puedes ajustar según necesidades)
+
+  cleanupIntervalConversations = setInterval(cleanupInactiveConversations, 5 * 60 * 1000);
+}
+
+const cleanupInactiveConversations = () => {
+  const currentTime = Date.now();
+  const twoHoursInMs = 3* 60 * 1000;
+  
+  // Filtrar los conversaciones inactivas por más de 24 horas
+  const activeConversations = conversations.filter(conversation => {
+    const isActive = (currentTime - conversation.lastActivity) < twoHoursInMs;
+    
+    if (!isActive) {
+      console.log(`Eliminando conversación inactiva de la memoria: ${conversation.userId}`);
+    }
+    
+    return isActive;
+  });
+  
+  // Actualizar la lista de conversaciones
+  conversations = activeConversations;
+  
+  // Si no quedan conversaciones, detener el proceso de limpieza
+  if (conversations.length === 0) {
+    clearInterval(cleanupIntervalConversations);
+    cleanupIntervalConversations = null;
+  }
+}
+
+// ************************************************
 
 const generateFirstSystemAndAssistantMessage = async (
   bot,
@@ -121,120 +223,203 @@ const initializeIO = async (io) => {
 
     // ********* questionary events *********
 
-    socket.on("questionary", async (phoneNumber, questionaryId) => {
-      // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
-      // if (!questionary) return socket.emit("questionary not founded", questionaryId);
-      questionaryLogs("Questionary started", socket.id, phoneNumber, clientIP);
-      // const phoneNumberValidated =
-      //   phoneNumber?.length && phoneNumber !== "josebaTesting"
-      //     ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
-      //         phoneNumber
-      //       )
-      //     : true;
+    socket.on(
+      "questionary",
+      async (phoneNumber, questionaryId, generatedChatId) => {
+        // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
+        // if (!questionary) return socket.emit("questionary not founded", questionaryId);
+        // const phoneNumberValidated =
+        //   phoneNumber?.length && phoneNumber !== "josebaTesting"
+        //     ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+        //         phoneNumber
+        //       )
+        //     : true;
 
-      // const invalidIp =
-      //   phoneNumber !== "josebaTesting" &&
-      //   userIps.find(
-      //     (userIp) =>
-      //       userIp.ip === clientIP && userIp.expirationDate > new Date()
-      //   );
+        // const invalidIp =
+        //   phoneNumber !== "josebaTesting" &&
+        //   userIps.find(
+        //     (userIp) =>
+        //       userIp.ip === clientIP && userIp.expirationDate > new Date()
+        //   );
 
-      // if (!phoneNumberValidated || invalidIp) {
-      //   if (!phoneNumberValidated)
-      //     questionaryLogs(
-      //       "phone number already used",
-      //       socket.id,
-      //       phoneNumber,
-      //       clientIP
-      //     );
-      //   if (invalidIp)
-      //     questionaryLogs(
-      //       "ip already used today",
-      //       socket.id,
-      //       phoneNumber,
-      //       clientIP
-      //     );
-      //   return socket.emit("phone number already used", phoneNumber);
-      // }
+        // if (!phoneNumberValidated || invalidIp) {
+        //   if (!phoneNumberValidated)
+        //     questionaryLogs(
+        //       "phone number already used",
+        //       socket.id,
+        //       phoneNumber,
+        //       clientIP
+        //     );
+        //   if (invalidIp)
+        //     questionaryLogs(
+        //       "ip already used today",
+        //       socket.id,
+        //       phoneNumber,
+        //       clientIP
+        //     );
+        //   return socket.emit("phone number already used", phoneNumber);
+        // }
 
-      questionaries.push({
-        userId: socket.id,
-        phoneNumber: phoneNumber || "",
-        questions: [],
-        questionary: questionaryId,
-        type: "questionary",
-      });
+        const questionaryIndex = questionaries.findIndex(
+          (q) => q?.userId === generatedChatId
+        );
 
-      socket.emit("server socket id", socket.id);
-    });
+        if (questionaryIndex === -1) {
+          const newQuestionary = {
+            userId: generatedChatId,
+            phoneNumber: phoneNumber || "",
+            questions: [],
+            questionary: questionaryId,
+            type: "questionary",
+          };
+          questionaries.push(newQuestionary);
+          updateQuestionaryActivity(questionaryIndex);
 
-    socket.on("questionary response", (questionaryResponse) => {
-      const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
-      );
+          enqueueCallback(
+            `Crear nuevo cuestionario (${generatedChatId})`,
+            async () => {
+              const questionaryCreated =
+                await userQuestionaryInteractor.createUserQuestionary(
+                  newQuestionary
+                );
+              await chatInteractor.createChat(
+                {
+                  chatId: generatedChatId,
+                  firstName: "User[web]",
+                  model:
+                    questionaryCreated?.questionary?.bot?.model ||
+                    "Clinics questionary",
+                  botName:
+                    questionaryCreated?.questionary?.bot?.name ||
+                    "Clinics questionary",
+                },
+                generatedChatId,
+                undefined,
+                undefined
+              );
+            }
+          );
+        }
 
-      if (questionaryResponse.type === "contact") {
         questionaryLogs(
-          "Questionary started",
-          socket.id,
-          questionaryResponse.phoneNumber,
-          ""
+          questionaryIndex === -1
+            ? "Questionary started"
+            : "Continuing questionary",
+          generatedChatId,
+          phoneNumber,
+          clientIP
+        );
+
+        socket.emit("server socket id", generatedChatId);
+      }
+    );
+
+    socket.on(
+      "questionary response",
+      (questionaryResponse, generatedSocketId) => {
+        const questionaryIndex = questionaries.findIndex(
+          (q) => q.userId === generatedSocketId
+        );
+
+        if (questionaryResponse.type === "contact") {
+          questionaryLogs(
+            "Contact information received",
+            generatedSocketId,
+            `${questionaryResponse.name} - ${questionaryResponse.phone}`,
+            ""
+          );
+          if (questionaryIndex !== -1) {
+            questionaries[questionaryIndex].name = questionaryResponse.name;
+            questionaries[questionaryIndex].phoneNumber =
+              questionaryResponse.phone;
+
+            const questionaryData = JSON.parse(
+              JSON.stringify(questionaries[questionaryIndex])
+            );
+
+            updateQuestionaryActivity(questionaryIndex);
+
+            enqueueCallback(
+              `Actualizar cuestionario (${generatedSocketId})`,
+              async () => {
+                await userQuestionaryInteractor.updateUserQuestionary(
+                  generatedSocketId,
+                  questionaryData
+                );
+              }
+            );
+          }
+          return;
+        }
+
+        questionaryLogs(
+          `${questionaryResponse?.backupQuestion?.label}: ${
+            questionaryResponse.optionValue ||
+            `${
+              questionaryResponse.backupQuestion.options.find(
+                (o) => o.key === questionaryResponse.optionKey
+              ).label.length
+                ? questionaryResponse.backupQuestion.options.find(
+                    (o) => o.key === questionaryResponse.optionKey
+                  ).label
+                : questionaryResponse.backupQuestion.options.find(
+                    (o) => o.key === questionaryResponse.optionKey
+                  ).key
+            }`
+          }`,
+          generatedSocketId,
+          questionaries?.[questionaryIndex]?.phoneNumber,
+          clientIP
+        );
+        socket.emit(
+          "questionary response received",
+          "questionary response received"
         );
         if (questionaryIndex !== -1) {
-          questionaries[questionaryIndex].name = questionaryResponse.name;
-          questionaries[questionaryIndex].phoneNumber =
-            questionaryResponse.phone;
-        }
-        return;
-      }
+          const questionaryQuestionIndex = questionaries[
+            questionaryIndex
+          ].questions.findIndex(
+            (q) => q.question === questionaryResponse.question
+          );
+          if (questionaryQuestionIndex !== -1) {
+            questionaries[questionaryIndex].questions[
+              questionaryQuestionIndex
+            ] = questionaryResponse;
+          } else {
+            questionaries[questionaryIndex].questions.push(questionaryResponse);
+          }
+          const questionaryData = JSON.parse(
+            JSON.stringify(questionaries[questionaryIndex])
+          );
 
+          updateQuestionaryActivity(questionaryIndex);
+          enqueueCallback(
+            `Actualizar cuestionario (${generatedSocketId})`,
+            async () => {
+              await userQuestionaryInteractor.updateUserQuestionary(
+                generatedSocketId,
+                questionaryData
+              );
+            }
+          );
+        }
+      }
+    );
+
+    socket.on("questionary finished", async (language, generatedSocketId) => {
       questionaryLogs(
-        `${questionaryResponse?.backupQuestion?.label}: ${
-          questionaryResponse.optionValue ||
-          `${
-            questionaryResponse.backupQuestion.options.find(
-              (o) => o.key === questionaryResponse.optionKey
-            ).label.length
-              ? questionaryResponse.backupQuestion.options.find(
-                  (o) => o.key === questionaryResponse.optionKey
-                ).label
-              : questionaryResponse.backupQuestion.options.find(
-                  (o) => o.key === questionaryResponse.optionKey
-                ).key
-          }`
-        }`,
-        socket.id,
-        questionaries?.[questionaryIndex]?.phoneNumber,
+        "Questionary finished",
+        generatedSocketId,
+        undefined,
         clientIP
       );
-      socket.emit(
-        "questionary response received",
-        "questionary response received"
-      );
-      if (questionaryIndex !== -1) {
-        const questionaryQuestionIndex = questionaries[
-          questionaryIndex
-        ].questions.findIndex(
-          (q) => q.question === questionaryResponse.question
-        );
-        if (questionaryQuestionIndex !== -1) {
-          questionaries[questionaryIndex].questions[questionaryQuestionIndex] =
-            questionaryResponse;
-        } else {
-          questionaries[questionaryIndex].questions.push(questionaryResponse);
-        }
-      }
-    });
-
-    socket.on("questionary finished", async (language) => {
-      questionaryLogs("Questionary finished", socket.id, undefined, clientIP);
       const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
+        (q) => q.userId === generatedSocketId
       );
       if (questionaryIndex !== -1) {
         questionaryLogs(
           `Questionary finished and saving:`,
-          socket.id,
+          generatedSocketId,
           questionaries[questionaryIndex]?.phoneNumber,
           clientIP,
           questionaries[questionaryIndex]
@@ -244,173 +429,279 @@ const initializeIO = async (io) => {
           ip: clientIP,
           expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
         });
-        console.log("CREATING USER QUESTIONARY");
-        const questionaryCreated =
-          await userQuestionaryInteractor.createUserQuestionary(
-            questionaries[questionaryIndex]
-          );
-        if (!questionaryCreated) {
-          questionaryLogs(
-            `Questionary not saved: ${questionaries[questionaryIndex]}`,
-            socket.id,
-            phoneNumber,
-            clientIP
-          );
-          return socket.emit("questionary not saved", socket.id);
-        }
-        questionaries.splice(questionaryIndex, 1);
-        socket.emit(
-          "questionary saved",
-          questionaryCreated.questionary.bot.name
+        console.log("UPDATING USER QUESTIONARY");
+        const questionaryData = JSON.parse(
+          JSON.stringify(questionaries[questionaryIndex])
         );
+        enqueueCallback(
+          `Actualizar cuestionario (${generatedSocketId})`,
+          async () => {
+            const userQuestionaryUpdated =
+              await userQuestionaryInteractor.updateUserQuestionary(
+                generatedSocketId,
+                questionaryData
+              );
+            socket.emit(
+              "questionary saved",
+              // "Clinics questionary"
+              userQuestionaryUpdated?.questionary?.bot?.name ||
+                "Clinics questionary"
+            );
+          }
+        );
+        // const questionaryCreated =
+        //   await userQuestionaryInteractor.createUserQuestionary(
+        //     questionaries[questionaryIndex]
+        //   );
+        // if (!questionaryCreated) {
+        //   questionaryLogs(
+        //     `Questionary not saved: ${questionaries[questionaryIndex]}`,
+        //     generatedSocketId,
+        //     phoneNumber,
+        //     clientIP
+        //   );
+        //   return socket.emit("questionary not saved", generatedSocketId);
+        // }
+        questionaries.splice(questionaryIndex, 1);
       }
     });
 
     // ********* static questionary events *********
 
-    socket.on("static questionary", async (phoneNumber, questionaryId, isTrivelliniQuestionary) => {
-      // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
-      // if (!questionary) return socket.emit("questionary not founded", questionaryId);
-      questionaryLogs("Questionary started", socket.id, phoneNumber);
-      // const phoneNumberValidated = phoneNumber?.length
-      //   ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
-      //       phoneNumber
-      //     )
-      //   : true;
+    socket.on(
+      "static questionary",
+      async (
+        phoneNumber,
+        questionaryId,
+        isTrivelliniQuestionary,
+        generatedChatId
+      ) => {
+        // const questionary = await questionaryInteractor.getUserQuestionaryById(questionaryId);
+        // if (!questionary) return socket.emit("questionary not founded", questionaryId);
+        // const phoneNumberValidated = phoneNumber?.length
+        //   ? await userQuestionaryInteractor.validateUserQuestionaryWithPhoneNumber(
+        //       phoneNumber
+        //     )
+        //   : true;
 
-      // const invalidIp = userIps.find(
-      //   (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
-      // );
+        // const invalidIp = userIps.find(
+        //   (userIp) => userIp.ip === clientIP && userIp.expirationDate > new Date()
+        // );
 
-      // if (!phoneNumberValidated || invalidIp) {
-      //   if (!phoneNumberValidated)
-      //     questionaryLogs(
-      //       "phone number already used",
-      //       socket.id,
-      //       phoneNumber,
-      //       clientIP
-      //     );
-      //   if (invalidIp)
-      //     questionaryLogs(
-      //       "ip already used today",
-      //       socket.id,
-      //       phoneNumber,
-      //       clientIP
-      //     );
-      //   return socket.emit("phone number already used", phoneNumber);
-      // }
+        // if (!phoneNumberValidated || invalidIp) {
+        //   if (!phoneNumberValidated)
+        //     questionaryLogs(
+        //       "phone number already used",
+        //       socket.id,
+        //       phoneNumber,
+        //       clientIP
+        //     );
+        //   if (invalidIp)
+        //     questionaryLogs(
+        //       "ip already used today",
+        //       socket.id,
+        //       phoneNumber,
+        //       clientIP
+        //     );
+        //   return socket.emit("phone number already used", phoneNumber);
+        // }
 
-      questionaries.push({
-        userId: socket.id,
-        phoneNumber: phoneNumber || "",
-        questions: [],
-        questionary: questionaryId,
-        type: !isTrivelliniQuestionary ? "static questionary" : "Trivellini questionary",
-      });
-
-      socket.emit("static questionary server socket id", socket.id);
-    });
-
-    socket.on("static questionary response", (questionaryResponse) => {
-      const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
-      );
-
-      if (questionaryResponse.type === "contact") {
-        questionaryLogs(
-          "Questionary started",
-          socket.id,
-          questionaryResponse.phoneNumber,
-          ""
+        const questionaryIndex = questionaries.findIndex(
+          (q) => q.userId === generatedChatId
         );
-        if (questionaryIndex !== -1) {
-          questionaries[questionaryIndex].name = questionaryResponse.name;
-          questionaries[questionaryIndex].phoneNumber =
-            questionaryResponse.phone;
-        }
-        return;
-      }
 
-      questionaryLogs(
-        `${questionaryResponse?.backupQuestion?.label}: ${
-          questionaryResponse.optionValue ||
-          `${
-            questionaryResponse.backupQuestion.options.find(
-              (o) => o.key === questionaryResponse.optionKey
-            ).label.length
-              ? questionaryResponse.backupQuestion.options.find(
-                  (o) => o.key === questionaryResponse.optionKey
-                ).label
-              : questionaryResponse.backupQuestion.options.find(
-                  (o) => o.key === questionaryResponse.optionKey
-                ).key
-          }`
-        }`,
-        socket.id,
-        questionaries?.[questionaryIndex]?.phoneNumber,
-        ""
-      );
-
-      socket.emit(
-        "static questionary response received",
-        "static questionary response received"
-      );
-      if (questionaryIndex !== -1) {
-        const questionaryQuestionIndex = questionaries[
-          questionaryIndex
-        ].questions.findIndex(
-          (q) => q.question === questionaryResponse.question
-        );
-        if (questionaryQuestionIndex !== -1) {
-          questionaries[questionaryIndex].questions[questionaryQuestionIndex] =
-            questionaryResponse;
-        } else {
-          questionaries[questionaryIndex].questions.push(questionaryResponse);
-        }
-      }
-    });
-
-    socket.on("static questionary finished", async (language) => {
-      questionaryLogs("Questionary finished", socket.id, undefined);
-      const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
-      );
-      if (questionaryIndex !== -1) {
-        questionaryLogs(
-          `Questionary finished and saving:`,
-          socket.id,
-          questionaries[questionaryIndex]?.phoneNumber,
-          "",
-          questionaries[questionaryIndex]
-        );
-        questionaries[questionaryIndex].languageLocale = language || "es";
-        const questionaryCreated =
-          await userQuestionaryInteractor.createUserQuestionary(
-            questionaries[questionaryIndex]
+        if (questionaryIndex === -1) {
+          const newQuestionary = {
+            userId: generatedChatId,
+            phoneNumber: phoneNumber || "",
+            questions: [],
+            questionary: questionaryId,
+            type: !isTrivelliniQuestionary
+              ? "static questionary"
+              : "Trivellini questionary",
+          };
+          questionaries.push(newQuestionary);
+          updateQuestionaryActivity(questionaryIndex);
+          enqueueCallback(
+            `Crear nuevo cuestionario (${generatedChatId})`,
+            async () => {
+              await userQuestionaryInteractor.createUserQuestionary(
+                newQuestionary
+              );
+              await chatInteractor.createChat(
+                {
+                  chatId: generatedChatId,
+                  firstName: newQuestionary.phoneNumber || "Anonymous",
+                  model: newQuestionary?.type || "static questionary",
+                  botName: newQuestionary?.type || "static questionary",
+                },
+                generatedChatId
+              );
+            }
           );
-        if (!questionaryCreated) {
+        }
+
+        questionaryLogs(
+          questionaryIndex === -1
+            ? "Questionary started"
+            : "Continuing questionary",
+          generatedChatId,
+          phoneNumber
+        );
+
+        socket.emit("static questionary server socket id", generatedChatId);
+      }
+    );
+
+    socket.on(
+      "static questionary response",
+      (questionaryResponse, generatedChatId) => {
+        const questionaryIndex = questionaries.findIndex(
+          (q) => q.userId === generatedChatId
+        );
+
+        if (questionaryResponse.type === "contact") {
           questionaryLogs(
-            `Questionary not saved: ${questionaries[questionaryIndex]}`,
-            socket.id,
-            phoneNumber,
+            "Contact information received",
+            generatedChatId,
+            `${questionaryResponse.name} - ${questionaryResponse.phone}`,
             ""
           );
-          return socket.emit("static questionary not saved", socket.id);
+          if (questionaryIndex !== -1) {
+            questionaries[questionaryIndex].name = questionaryResponse.name;
+            questionaries[questionaryIndex].phoneNumber =
+              questionaryResponse.phone;
+
+            const questionaryData = JSON.parse(
+              JSON.stringify(questionaries[questionaryIndex])
+            );
+            updateQuestionaryActivity(questionaryIndex);
+            enqueueCallback(
+              `Actualizar cuestionario (${generatedChatId})`,
+              async () => {
+                await userQuestionaryInteractor.updateUserQuestionary(
+                  generatedChatId,
+                  questionaryData
+                );
+              }
+            );
+          }
+          return;
         }
-        chatInteractor.createChat(
-          {
-            chatId: socket.id,
-            firstName:
-              questionaries[questionaryIndex]?.phoneNumber || "Anonymous",
-            model: questionaries[questionaryIndex].type || "static questionary",
-            botName: questionaries[questionaryIndex].type || "static questionary",
-          },
-          socket.id
+
+        questionaryLogs(
+          `${questionaryResponse?.backupQuestion?.label}: ${
+            questionaryResponse.optionValue ||
+            `${
+              questionaryResponse.backupQuestion.options.find(
+                (o) => o.key === questionaryResponse.optionKey
+              ).label.length
+                ? questionaryResponse.backupQuestion.options.find(
+                    (o) => o.key === questionaryResponse.optionKey
+                  ).label
+                : questionaryResponse.backupQuestion.options.find(
+                    (o) => o.key === questionaryResponse.optionKey
+                  ).key
+            }`
+          }`,
+          generatedChatId,
+          questionaries?.[questionaryIndex]?.phoneNumber,
+          ""
         );
-        questionaries.splice(questionaryIndex, 1);
-        socket.emit("static questionary saved", socket.id);
+
+        socket.emit(
+          "static questionary response received",
+          "static questionary response received"
+        );
+        if (questionaryIndex !== -1) {
+          const questionaryQuestionIndex = questionaries[
+            questionaryIndex
+          ].questions.findIndex(
+            (q) => q.question === questionaryResponse.question
+          );
+          if (questionaryQuestionIndex !== -1) {
+            questionaries[questionaryIndex].questions[
+              questionaryQuestionIndex
+            ] = questionaryResponse;
+          } else {
+            questionaries[questionaryIndex].questions.push(questionaryResponse);
+          }
+          questionaryData = JSON.parse(
+            JSON.stringify(questionaries[questionaryIndex])
+          );
+          updateQuestionaryActivity(questionaryIndex);
+          enqueueCallback(
+            `Actualizar cuestionario (${generatedChatId})`,
+            async () => {
+              await userQuestionaryInteractor.updateUserQuestionary(
+                generatedChatId,
+                questionaryData
+              );
+            }
+          );
+        }
       }
-    });
+    );
+
+    socket.on(
+      "static questionary finished",
+      async (language, generatedChatId) => {
+        questionaryLogs("Questionary finished", generatedChatId, undefined);
+        const questionaryIndex = questionaries.findIndex(
+          (q) => q.userId === generatedChatId
+        );
+        if (questionaryIndex !== -1) {
+          questionaryLogs(
+            `Questionary finished and saving:`,
+            generatedChatId,
+            questionaries[questionaryIndex]?.phoneNumber,
+            "",
+            questionaries[questionaryIndex]
+          );
+          questionaries[questionaryIndex].languageLocale = language || "es";
+          const questionaryData = JSON.parse(
+            JSON.stringify(questionaries[questionaryIndex])
+          );
+          enqueueCallback(
+            `Actualizar cuestionario (${generatedChatId})`,
+            async () => {
+              await userQuestionaryInteractor.updateUserQuestionary(
+                generatedChatId,
+                questionaryData
+              );
+            }
+          );
+
+          // const questionaryCreated =
+          //   await userQuestionaryInteractor.createUserQuestionary(
+          //     questionaries[questionaryIndex]
+          //   );
+          // if (!questionaryCreated) {
+          //   questionaryLogs(
+          //     `Questionary not saved: ${questionaries[questionaryIndex]}`,
+          //     generatedChatId,
+          //     phoneNumber,
+          //     ""
+          //   );
+          //   return socket.emit("static questionary not saved", generatedChatId);
+          // }
+          // chatInteractor.createChat(
+          //   {
+          //     chatId: generatedChatId,
+          //     firstName:
+          //       questionaries[questionaryIndex]?.phoneNumber || "Anonymous",
+          //     model:
+          //       questionaries[questionaryIndex].type || "static questionary",
+          //     botName:
+          //       questionaries[questionaryIndex].type || "static questionary",
+          //   },
+          //   generatedChatId
+          // );
+          questionaries.splice(questionaryIndex, 1);
+          socket.emit("static questionary saved", generatedChatId);
+        }
+      }
+    );
 
     // ********* bot events *********
     socket.on("bot", async (botName, formId) => {
@@ -430,20 +721,26 @@ const initializeIO = async (io) => {
         socket.emit("bot received", {
           body: "bot received",
         });
+
+        const userQuestionary =
+          await userQuestionaryInteractor.getUserQuestionary(formId);
+
         const chatBot = bots.find((b) => b.name === botName);
-        if (!chatBot) {
-          socket.emit("bot not found", { botName: botName });
-          return;
+
+        if (!userQuestionary) {
+          if (!chatBot) {
+            socket.emit("bot not found", { botName: botName });
+            return;
+          }
+
+          if (!userQuestionary || chatBot?.type !== "webform")
+            throw new Error();
         }
 
         const userIpIndex = userIps.findIndex(
           (userIp) => userIp.ip === clientIP
         );
         // if (userIpIndex !== -1) userIps[userIpIndex].promptGenerated = true;
-
-        const userQuestionary =
-          await userQuestionaryInteractor.getUserQuestionary(formId);
-        if (!userQuestionary || chatBot.type !== "webform") throw new Error();
 
         // if (userQuestionary?.generatedPrompt) {
         //   if (userQuestionary?.firstResponsePrompt) {
@@ -518,7 +815,7 @@ const initializeIO = async (io) => {
                     lat: Number(location.coordinates.split(",")[0]),
                     lon: Number(location.coordinates.split(",")[1]),
                     pais: q.optionKey === "a" ? zone.name : location.name,
-                  }; 
+                  };
                 }
               } else if (q.question.slug === "how_much_do_you_plan_to_invest") {
                 userAnswers.price = {
@@ -534,52 +831,65 @@ const initializeIO = async (io) => {
               clinics,
               userQuestionary.languageLocale?.toLowerCase() || "es"
             );
-            console.log("CalculatedClinics", calculatedClinics.response);
             clinicsLogs(
               `CalculatedClinics: ${calculatedClinics.response}`,
-              socket.id,
+              formId,
               undefined,
               clientIP
             );
             conversations.push({
-              userId: socket.id,
-              botName,
+              userId: formId,
+              botName: botName || userQuestionary?.questionary?.bot?.name,
               lastMessages: [JSON.stringify(calculatedClinics.response)],
             });
+            updateConversationsActivity(conversations.length - 1);
             socket.emit("message", {
               body: JSON.stringify(calculatedClinics.response),
             });
-            chatInteractor.createChat(
-              {
-                chatId: socket.id,
-                firstName: "User[web]",
-                model: chatBot.model,
-                botName: chatBot.name,
-              },
-              formId,
-              undefined,
-              undefined,
-              JSON.stringify(calculatedClinics.response),
-              calculatedClinics.logs
-            );
-            await messageInteractor.createMessage({
-              chatId: socket.id,
-              botName: chatBot.name,
-              data: "Initializing chat...",
-              role: "system",
-              promptToken: 0,
-              tokens: 0,
-              totalTokens: 0,
-            });
+            enqueueCallback(`Crear chat (${formId})`, async () => {
+              const chat = await chatInteractor.getChatByChatId(formId);
+              if (!chat) {
+                await chatInteractor.createChat(
+                  {
+                    chatId: formId,
+                    firstName: "User[web]",
+                    model:
+                      chatBot?.model ||
+                      userQuestionary?.questionary?.bot?.model,
+                    botName:
+                      chatBot?.name || userQuestionary?.questionary?.bot?.name,
+                  },
+                  formId,
+                  undefined,
+                  undefined,
+                  JSON.stringify(calculatedClinics.response),
+                  calculatedClinics.logs
+                );
+              } else {
+                await userQuestionaryInteractor.updateUserQuestionary(formId, {
+                  calculatedClinics: JSON.stringify(calculatedClinics.response),
+                  calculatedClinicsLogs: calculatedClinics.logs,
+                });
+              }
+              await messageInteractor.createMessage({
+                chatId: formId,
+                botName: chatBot?.name || chat?.botName,
+                data: "Initializing chat...",
+                role: "system",
+                promptToken: 0,
+                tokens: 0,
+                totalTokens: 0,
+              });
 
-            await messageInteractor.createMessage({
-              chatId: socket.id,
-              botName: chatBot.name,
-              data: JSON.stringify(calculatedClinics.response),
-              role: "assistant",
-              promptToken: 0,
-              tokens: 0,
-              totalTokens: 0,
+              await messageInteractor.createMessage({
+                chatId: formId,
+                botName: chatBot?.name || chat?.botName,
+                data: JSON.stringify(calculatedClinics.response),
+                role: "assistant",
+                promptToken: 0,
+                tokens: 0,
+                totalTokens: 0,
+              });
             });
           } catch (err) {
             console.log(err);
@@ -587,25 +897,31 @@ const initializeIO = async (io) => {
               body: "An error has occurred. Please try again later.",
             });
 
-            chatInteractor.createChat(
-              {
-                chatId: socket.id,
-                firstName: "User[web]",
-                model: chatBot.model,
-                botName: chatBot.name,
-              },
-              formId,
-              "",
-              ""
-            );
-            await messageInteractor.createMessage({
-              chatId: socket.id,
-              botName: chatBot.name,
-              data: "An error has occurred. Please try again later.",
-              role: "assistant",
-              promptToken: 0,
-              tokens: 0,
-              totalTokens: 0,
+            enqueueCallback(`Crear chat (${formId})`, async () => {
+              const chat = await chatInteractor.getChatByChatId(formId);
+              if (!chat) {
+                chatInteractor.createChat(
+                  {
+                    chatId: formId,
+                    firstName: "User[web]",
+                    model:
+                      chatBot?.model || userQuestionary?.questionary?.bot?.name,
+                    botName: chatBot?.name,
+                  },
+                  formId,
+                  "",
+                  ""
+                );
+              }
+              await messageInteractor.createMessage({
+                chatId: formId,
+                botName: chatBot?.name || chat?.botName,
+                data: "An error has occurred. Please try again later.",
+                role: "assistant",
+                promptToken: 0,
+                tokens: 0,
+                totalTokens: 0,
+              });
             });
           }
         } else {
@@ -613,25 +929,27 @@ const initializeIO = async (io) => {
             body: "An error has occurred. Please try again later.",
           });
 
-          chatInteractor.createChat(
-            {
-              chatId: socket.id,
-              firstName: "User[web]",
-              model: chatBot.model,
-              botName: chatBot.name,
-            },
-            formId,
-            "",
-            ""
-          );
-          await messageInteractor.createMessage({
-            chatId: socket.id,
-            botName: chatBot.name,
-            data: "An error has occurred. Please try again later.",
-            role: "assistant",
-            promptToken: 0,
-            tokens: 0,
-            totalTokens: 0,
+          enqueueCallback(`Crear chat (${formId})`, async () => {
+            chatInteractor.createChat(
+              {
+                chatId: formId,
+                firstName: "User[web]",
+                model: chatBot?.model,
+                botName: chatBot?.name,
+              },
+              formId,
+              "",
+              ""
+            );
+            await messageInteractor.createMessage({
+              chatId: formId,
+              botName: chatBot?.name,
+              data: "An error has occurred. Please try again later.",
+              role: "assistant",
+              promptToken: 0,
+              tokens: 0,
+              totalTokens: 0,
+            });
           });
         }
 
@@ -722,72 +1040,98 @@ const initializeIO = async (io) => {
         });
       }
     });
-    socket.on("external link", async (href) => {
+    socket.on("external link", async (href, formId) => {
       const conversationIndex = conversations.findIndex(
-        (user) => user.userId === socket.id
+        (user) => user.userId === (formId || socket.id)
       );
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
-      if (chatBot) {
-        clinicsLogs(
-          `External link clicked: ${href}`,
-          socket.id,
-          undefined,
-          clientIP
-        );
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: `El usuario hizo click al enlace que dirige a ${href}.`,
-          role: "user",
-        });
-      }
+      // if (chatBot) {
+      clinicsLogs(
+        `External link clicked: ${href}`,
+        formId || socket.id,
+        undefined,
+        clientIP
+      );
+      updateConversationsActivity(conversationIndex);
+      enqueueCallback(
+        `Crear mensaje de external link (${formId || socket.id})`,
+        async () => {
+          await messageInteractor.createMessage({
+            chatId: formId || socket.id,
+            botName: chatBot?.name,
+            data: `El usuario hizo click al enlace que dirige a ${href}.`,
+            role: "user",
+          });
+        }
+      );
+      // }
     });
 
-    socket.on("get evaluation", async (clinicName) => {
+    socket.on("get evaluation", async (clinicName, formId) => {
       const conversationIndex = conversations.findIndex(
-        (user) => user.userId === socket.id
+        (user) => user.userId === (formId || socket.id)
       );
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
-      if (chatBot) {
-        clinicsLogs(
-          `The user requested an evaluation for the clinic:  ${clinicName}`,
-          socket.id,
-          undefined,
-          clientIP
-        );
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: `El usuario solicitó una valoración para la clínica ${clinicName}.`,
-          role: "user",
-        });
-      }
+      updateConversationsActivity(conversationIndex);
+      // if (chatBot) {
+      clinicsLogs(
+        `The user requested an evaluation for the clinic:  ${clinicName}`,
+        formId || socket.id,
+        undefined,
+        clientIP
+      );
+      enqueueCallback(
+        `Crear mensaje de external link (${formId || socket.id})`,
+        async () => {
+          await messageInteractor.createMessage({
+            chatId: formId || socket.id,
+            botName: chatBot?.name,
+            data: `El usuario solicitó una valoración para la clínica ${clinicName}.`,
+            role: "user",
+          });
+        }
+      );
+      // }
     });
 
-    socket.on("clinics viewed", async (clinicName) => {
+    socket.on("clinics viewed", async (formId) => {
       const conversationIndex = conversations.findIndex(
-        (user) => user.userId === socket.id
+        (user) => user.userId === (formId || socket.id)
       );
       const chatBot = bots.find(
         (b) => b.name == conversations[conversationIndex]?.botName
       );
       if (chatBot) {
+        updateConversationsActivity(conversationIndex);
         clinicsLogs(
           `The user is on the clinics page.`,
-          socket.id,
+          formId || socket.id,
           undefined,
           clientIP
         );
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: `El usuario está en la página de clinicas.`,
-          role: "user",
-        });
+        enqueueCallback(
+          `Crear mensaje El usuario está en la página de clinicas (${
+            formId || socket.id
+          })`,
+          async () => {
+            const messageFounded = await messageInteractor.getMessage({
+              chatId: formId || socket.id,
+              botName: chatBot?.name,
+              data: `El usuario está en la página de clinicas.`,
+            });
+            if (!messageFounded)
+              await messageInteractor.createMessage({
+                chatId: formId || socket.id,
+                botName: chatBot?.name,
+                data: `El usuario está en la página de clinicas.`,
+                role: "user",
+              });
+          }
+        );
       }
     });
 
@@ -803,6 +1147,7 @@ const initializeIO = async (io) => {
           role: "user",
           content,
         });
+        updateConversationsActivity(conversationIndex);
         const chatBot = bots.find(
           (b) => b.name == conversations[conversationIndex].botName
         );
@@ -822,22 +1167,27 @@ const initializeIO = async (io) => {
         socket.emit("message", {
           body: openaiReply,
         });
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: content,
-          role: "user",
-        });
+        enqueueCallback(
+          `Crear mensaje (${content} - ${openaiReply})`,
+          async () => {
+            await messageInteractor.createMessage({
+              chatId: socket.id,
+              botName: chatBot.name,
+              data: content,
+              role: "user",
+            });
 
-        await messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          role: "assistant",
-          data: openaiReply,
-          promptToken: openaiResponse.data.usage.prompt_tokens,
-          tokens: openaiResponse.data.usage.completion_tokens,
-          totalTokens: openaiResponse.data.usage.total_tokens,
-        });
+            await messageInteractor.createMessage({
+              chatId: socket.id,
+              botName: chatBot.name,
+              role: "assistant",
+              data: openaiReply,
+              promptToken: openaiResponse.data.usage.prompt_tokens,
+              tokens: openaiResponse.data.usage.completion_tokens,
+              totalTokens: openaiResponse.data.usage.total_tokens,
+            });
+          }
+        );
 
         if (
           conversations[conversationIndex].lastMessages.length >
@@ -853,45 +1203,45 @@ const initializeIO = async (io) => {
       }
     });
 
-    socket.on("disconnect", () => {
-      generalLogs("Client disconnected", socket.id, undefined, clientIP);
+    // socket.on("disconnect", () => {
+    //   generalLogs("Client disconnected", socket.id, undefined, clientIP);
 
-      const questionaryIndex = questionaries.findIndex(
-        (q) => q.userId === socket.id
-      );
-      if (questionaryIndex !== -1) {
-        userQuestionaryInteractor.createUserQuestionaryAndChat(
-          questionaries[questionaryIndex],
-          questionaries[questionaryIndex].type || "static questionary"
-        );
+    //   const questionaryIndex = questionaries.findIndex(
+    //     (q) => q.userId === socket.id
+    //   );
+    //   if (questionaryIndex !== -1) {
+    //     userQuestionaryInteractor.createUserQuestionaryAndChat(
+    //       questionaries[questionaryIndex],
+    //       questionaries[questionaryIndex].type || "static questionary"
+    //     );
 
-        // userIps.push({
-        //   ip: clientIP,
-        //   expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
-        // });
+    //     // userIps.push({
+    //     //   ip: clientIP,
+    //     //   expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    //     // });
 
-        questionaries.splice(questionaryIndex, 1);
-      }
+    //     questionaries.splice(questionaryIndex, 1);
+    //   }
 
-      const conversationIndex = conversations.findIndex(
-        (user) => user.userId === socket.id
-      );
+    //   const conversationIndex = conversations.findIndex(
+    //     (user) => user.userId === socket.id
+    //   );
 
-      if (conversationIndex !== -1) {
-        const chatBot = bots.find(
-          (b) => b.name == conversations[conversationIndex]?.botName
-        );
+    //   if (conversationIndex !== -1) {
+    //     const chatBot = bots.find(
+    //       (b) => b.name == conversations[conversationIndex]?.botName
+    //     );
 
-        messageInteractor.createMessage({
-          chatId: socket.id,
-          botName: chatBot.name,
-          data: `El usuario se ha desconectado.`,
-          role: "user",
-        });
+    //     messageInteractor.createMessage({
+    //       chatId: socket.id,
+    //       botName: chatBot.name,
+    //       data: `El usuario se ha desconectado.`,
+    //       role: "user",
+    //     });
 
-        return conversations.splice(conversationIndex, 1);
-      }
-    });
+    //     return conversations.splice(conversationIndex, 1);
+    //   }
+    // });
   });
 };
 

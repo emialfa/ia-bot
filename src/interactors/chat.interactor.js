@@ -183,6 +183,15 @@ const getChatByExternalIdAndBotName = async (externalId, botName, chatId) => {
   }
 };
 
+const getChatByChatId = async (chatId) => {
+  try {
+    const chat = await chatRepository.getChatByChatId(chatId, undefined);
+    return chat;
+  } catch (err) {
+    throw { message: err, status: 400, description: err.message };
+  }
+};
+
 const createChat = async (
   chat,
   userId,
@@ -268,6 +277,7 @@ const exportToDriveAndTrello = async (body) => {
 module.exports = {
   getChats,
   getChatByExternalIdAndBotName,
+  getChatByChatId,
   createChat,
   createStaticChat,
   deleteChats,

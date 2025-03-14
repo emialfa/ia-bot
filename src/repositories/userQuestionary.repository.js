@@ -9,7 +9,16 @@ const Question = require("../models/Question.model");
 const getUserQuestionary = async (query) => {
   return await UserQuestionary.findOne(query).populate([
     "questions.question",
-    "questionary.bot",
+    {
+      path: "questionary",
+      model: "Questionary",
+      populate: [
+        {
+          path: "bot",
+          model: "Bot",
+        },
+      ],
+    },
   ]);
 };
 
@@ -36,7 +45,22 @@ const createUserQuestionary = async (userQuestionary) => {
 };
 
 const updateUserQuestionaryByUserId = async (userId, data) => {
-  return await UserQuestionary.updateOne({ userId }, data);
+  return await UserQuestionary.findOneAndUpdate(
+    { userId },
+    { $set: data },
+    { new: true } // Devuelve el documento actualizado
+  ).populate([
+    {
+      path: "questionary",
+      model: "Questionary",
+      populate: [
+        {
+          path: "bot",
+          model: "Bot",
+        },
+      ],
+    },
+  ]);
 };
 
 module.exports = { getUserQuestionary, createUserQuestionary, updateUserQuestionaryByUserId };

@@ -33,9 +33,9 @@ const getChatsWithTotalTokens = async (page, items, search) => {
       {
         $or: [
           { "userQuestionary.name": { $regex: search, $options: "i" } },
-          { "userQuestionary.phoneNumber": { $regex: search, $options: "i" } }
-        ]
-      }
+          { "userQuestionary.phoneNumber": { $regex: search, $options: "i" } },
+        ],
+      },
     ];
   }
 
@@ -45,9 +45,9 @@ const getChatsWithTotalTokens = async (page, items, search) => {
     userQuestionaryIds = await UserQuestionary.find({
       $or: [
         { name: { $regex: search, $options: "i" } },
-        { phoneNumber: { $regex: search, $options: "i" } }
-      ]
-    }).distinct('_id');
+        { phoneNumber: { $regex: search, $options: "i" } },
+      ],
+    }).distinct("_id");
 
     // Agregamos la búsqueda por userQuestionary al query
     query.$or = query.$or || [];
@@ -134,8 +134,12 @@ const getChatbyChatId = async (chatId) => {
   ]);
 };
 
+const getChatByChatId= async (chatId) => {
+  return await Chat.findOne({ chatId });
+};
+
 const getChatByExternalIdAndBotName = async (externalId, botName) => {
-  return await Chat.findOne({ ...externalId, botName }).populate([
+  return await Chat.findOne({ ...externalId, ...(botName ? { botName } : {}) }).populate([
     {
       path: "userQuestionary",
       model: "UserQuestionary",
@@ -150,8 +154,8 @@ const createChat = async (chat) => {
 };
 
 const deleteChats = async (chatIds) => {
-  return await Chat.deleteMany({ _id: { $in: chatIds }})
-}
+  return await Chat.deleteMany({ _id: { $in: chatIds } });
+};
 
 module.exports = {
   getChats,
@@ -159,6 +163,7 @@ module.exports = {
   getChatsWithTotalTokens,
   getChatByExternalId,
   getChatByExternalIdAndBotName,
+  getChatByChatId,
   createChat,
-  deleteChats
+  deleteChats,
 };

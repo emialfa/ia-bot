@@ -31,6 +31,17 @@ const createUserQuestionary = async (userQuestionary) => {
   }
 };
 
+const updateUserQuestionary = async (userId, userQuestionary) => {
+  try {
+    return await userQuestionaryRepository.updateUserQuestionaryByUserId(
+      userId,
+      userQuestionary
+    );
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 const createUserQuestionaryAndChat = async (userQuestionaryToCreate, type) => {
   try {
     const userQuestionary = await createUserQuestionary(
@@ -79,5 +90,6 @@ module.exports = {
   getUserQuestionary,
   createUserQuestionary,
   createUserQuestionaryAndChat,
+  updateUserQuestionary,
   validateUserQuestionaryWithPhoneNumber,
 };
