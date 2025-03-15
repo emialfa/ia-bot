@@ -50,17 +50,17 @@ const updateQuestionaryActivity = async (questionaryIndex) => {
 };
 
 const startCleanupQuestionariesProcess = () => {
-  // Verificar cada 15 minutos (puedes ajustar según necesidades)
-  cleanupIntervalQuestionaries = setInterval(cleanupInactiveQuestionaries, 5 * 60 * 1000);
+  // Verificar cada 1 hora (puedes ajustar según necesidades)
+  cleanupIntervalQuestionaries = setInterval(cleanupInactiveQuestionaries, 60 * 60 * 1000); // 1 hora
 }
 
 const cleanupInactiveQuestionaries = () => {
   const currentTime = Date.now();
-  const twoHoursInMs = 3 * 60 * 1000;
+  const fourHoursInMs = 4 * 60 * 60 * 1000;
   
-  // Filtrar los cuestionarios inactivos por más de 2 horas
+  // Filtrar los cuestionarios inactivos por más de 4 horas
   const activeQuestionaries = questionaries.filter(questionary => {
-    const isActive = (currentTime - questionary.lastActivity) < twoHoursInMs;
+    const isActive = (currentTime - questionary.lastActivity) < fourHoursInMs;
     
     if (!isActive) {
       console.log(`Eliminando cuestionario inactivo de la memoria: ${questionary.userId}`);
@@ -99,18 +99,18 @@ const updateConversationsActivity = async (conversationIndex) => {
 };
 
 const startCleanupConversationsProcess = () => {
-  // Verificar cada 24 horas (puedes ajustar según necesidades)
+  // Verificar cada 6 horas (puedes ajustar según necesidades)
 
-  cleanupIntervalConversations = setInterval(cleanupInactiveConversations, 5 * 60 * 1000);
+  cleanupIntervalConversations = setInterval(cleanupInactiveConversations, 6 * 60 * 60 * 1000); // 6 horas
 }
 
 const cleanupInactiveConversations = () => {
   const currentTime = Date.now();
-  const twoHoursInMs = 3* 60 * 1000;
+  const twentyFourHoursInMs = 24 * 60 * 60 * 1000; // 24 horas
   
   // Filtrar los conversaciones inactivas por más de 24 horas
   const activeConversations = conversations.filter(conversation => {
-    const isActive = (currentTime - conversation.lastActivity) < twoHoursInMs;
+    const isActive = (currentTime - conversation.lastActivity) < twentyFourHoursInMs;
     
     if (!isActive) {
       console.log(`Eliminando conversación inactiva de la memoria: ${conversation.userId}`);
