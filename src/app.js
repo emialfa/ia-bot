@@ -6,6 +6,7 @@ const path = require("path");
 const { Server: SocketServer } = require("socket.io");
 const chatsRouter = require("./routes/chat.routes");
 const botsRouter = require("./routes/bot.routes");
+const leadsRouter = require("./routes/leads.routes");
 const expressIP = require('express-ip');
 const fs = require("fs");
 const app = express();
@@ -117,6 +118,7 @@ app.use(cors());
 
 app.use("/hair-questionary/api/chats", chatsRouter);
 app.use("/hair-questionary/api/bots", botsRouter);
+app.use("/hair-questionary/api/leads", leadsRouter);
 app.get("/hair-questionary/api/logs", (req, res) => {
   fs.readdir(logsDir, (err, files) => {
     if (err) {

@@ -44,6 +44,7 @@ const UserQuestionary = new Schema(
     firstResponsePrompt: String,
     calculatedClinics: String,
     calculatedClinicsLogs: [String],
+    bchData: Object,
   },
   {
     timestamps: true,

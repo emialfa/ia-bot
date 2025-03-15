@@ -9,6 +9,7 @@ const chatInteractor = require("./interactors/chat.interactor");
 const messageInteractor = require("./interactors/message.interactor");
 const questionaryInteractor = require("./interactors/questionary.interactor");
 const userQuestionaryInteractor = require("./interactors/userQuestionary.interactor");
+const leadsInteractor = require("./interactors/leads.interactor");
 const clinicRepository = require("./repositories/clinic.repository");
 const { enqueueCallback } = require("./utils/processQueue");
 
@@ -129,65 +130,6 @@ const cleanupInactiveConversations = () => {
 }
 
 // ************************************************
-
-const generateFirstSystemAndAssistantMessage = async (
-  bot,
-  userId,
-  userQuestionary
-) => {
-  try {
-    const botCloned = cloneObject(bot);
-    if (userId && userQuestionary) {
-      userQuestionary.questions.forEach((q) => {
-        const optionLabel = q.question.options.find(
-          (o) => o.key === q.optionKey
-        )?.label;
-        botCloned.prompt = botCloned.prompt.replace(
-          q.question.slug,
-          q.question.slug === "residential_zone"
-            ? `${q.optionValue ? q.optionValue + ", " : ""}${optionLabel}`
-            : q.optionValue || optionLabel
-        );
-      });
-
-      botCloned.prompt += ` Todo esto en el idioma ${
-        languages[userQuestionary.languageLocale || "es"]
-      }.`;
-      clinicsLogs(
-        `Prompt generated with questionary answers: ${botCloned.prompt}`,
-        userId
-      );
-    }
-
-    const firstSystemMessage = {
-      role: "system",
-      content: botCloned.prompt,
-    };
-    const firstResponse = await openaiService.generateMessage(
-      openai,
-      bot.model,
-      bot.temperature,
-      [firstSystemMessage]
-    );
-    if (!firstResponse)
-      throw new Error("Failed to generate message with openai service");
-    const reply = firstResponse.data.choices[0].message["content"];
-    const firstAssistantMessage = { role: "assistant", content: reply };
-    if (userId && bot.type === "webform")
-      clinicsLogs(
-        `Response generated with questionary answers: ${reply}`,
-        userId
-      );
-
-    return {
-      firstSystemMessage,
-      firstAssistantMessage,
-      firstMessageTokens: firstResponse.data.usage,
-    };
-  } catch (error) {
-    return null;
-  }
-};
 
 const setBots = (botsToSet) => {
   bots = botsToSet;
@@ -323,7 +265,7 @@ const initializeIO = async (io) => {
 
         if (questionaryResponse.type === "contact") {
           questionaryLogs(
-            "Contact information received",
+            `Contact information received: ${questionaryResponse.name} - ${questionaryResponse.phone}`,
             generatedSocketId,
             `${questionaryResponse.name} - ${questionaryResponse.phone}`,
             ""
@@ -345,6 +287,16 @@ const initializeIO = async (io) => {
                 await userQuestionaryInteractor.updateUserQuestionary(
                   generatedSocketId,
                   questionaryData
+                );
+
+                const lead = await leadsInteractor.findByPhoneAndName({
+                  name: questionaryData.name,
+                  phone: questionaryData.phoneNumber,
+                })
+                
+                if (lead) await userQuestionaryInteractor.updateUserQuestionary(
+                  generatedSocketId,
+                  { ...questionaryData, bchData: lead }
                 );
               }
             );
@@ -562,7 +514,7 @@ const initializeIO = async (io) => {
 
         if (questionaryResponse.type === "contact") {
           questionaryLogs(
-            "Contact information received",
+            `Contact information received: ${questionaryResponse.name} - ${questionaryResponse.phone}`,
             generatedChatId,
             `${questionaryResponse.name} - ${questionaryResponse.phone}`,
             ""
@@ -582,6 +534,16 @@ const initializeIO = async (io) => {
                 await userQuestionaryInteractor.updateUserQuestionary(
                   generatedChatId,
                   questionaryData
+                );
+
+                const lead = await leadsInteractor.findByPhoneAndName({
+                  name: questionaryData.name,
+                  phone: questionaryData.phoneNumber,
+                })
+                
+                if (lead) await userQuestionaryInteractor.updateUserQuestionary(
+                  generatedChatId,
+                  { ...questionaryData, bchData: lead }
                 );
               }
             );
@@ -1244,5 +1206,66 @@ const initializeIO = async (io) => {
     // });
   });
 };
+
+
+const generateFirstSystemAndAssistantMessage = async (
+  bot,
+  userId,
+  userQuestionary
+) => {
+  try {
+    const botCloned = cloneObject(bot);
+    if (userId && userQuestionary) {
+      userQuestionary.questions.forEach((q) => {
+        const optionLabel = q.question.options.find(
+          (o) => o.key === q.optionKey
+        )?.label;
+        botCloned.prompt = botCloned.prompt.replace(
+          q.question.slug,
+          q.question.slug === "residential_zone"
+            ? `${q.optionValue ? q.optionValue + ", " : ""}${optionLabel}`
+            : q.optionValue || optionLabel
+        );
+      });
+
+      botCloned.prompt += ` Todo esto en el idioma ${
+        languages[userQuestionary.languageLocale || "es"]
+      }.`;
+      clinicsLogs(
+        `Prompt generated with questionary answers: ${botCloned.prompt}`,
+        userId
+      );
+    }
+
+    const firstSystemMessage = {
+      role: "system",
+      content: botCloned.prompt,
+    };
+    const firstResponse = await openaiService.generateMessage(
+      openai,
+      bot.model,
+      bot.temperature,
+      [firstSystemMessage]
+    );
+    if (!firstResponse)
+      throw new Error("Failed to generate message with openai service");
+    const reply = firstResponse.data.choices[0].message["content"];
+    const firstAssistantMessage = { role: "assistant", content: reply };
+    if (userId && bot.type === "webform")
+      clinicsLogs(
+        `Response generated with questionary answers: ${reply}`,
+        userId
+      );
+
+    return {
+      firstSystemMessage,
+      firstAssistantMessage,
+      firstMessageTokens: firstResponse.data.usage,
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
 
 module.exports = { initializeIO, setBots, addBot, updateBot, removeBot };
