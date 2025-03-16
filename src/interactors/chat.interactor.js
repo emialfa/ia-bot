@@ -224,7 +224,7 @@ const createChat = async (
     return await chatRepository.createChat({
       ...chat,
       ...(userQuestionary
-        ? { userQuestionary: userQuestionary._id.toString() }
+        ? { userQuestionary: userQuestionary._id?.toString() }
         : {}),
     });
   } catch (err) {
@@ -247,7 +247,7 @@ const createStaticChat = async (chat, userId) => {
     return await chatRepository.createChat({
       ...chat,
       ...(userQuestionary
-        ? { userQuestionary: userQuestionary._id.toString() }
+        ? { userQuestionary: userQuestionary._id?.toString() }
         : {}),
     });
   } catch (err) {

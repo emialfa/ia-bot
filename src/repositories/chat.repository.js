@@ -72,8 +72,8 @@ const getChatsWithTotalTokens = async (page, items, search) => {
 
   const chatsToSearch = chats.map((chat) => ({
     ...(chat.externalId
-      ? { chatExternalId: chat.externalId.toString() }
-      : { chatId: chat.chatId.toString() }),
+      ? { chatExternalId: chat.externalId?.toString() }
+      : { chatId: chat.chatId?.toString() }),
     botName: chat.botName,
   }));
 
@@ -103,7 +103,7 @@ const getChatsWithTotalTokens = async (page, items, search) => {
       ({ _id }) =>
         (externalId
           ? _id.chatExternalId === externalId?.toString()
-          : _id.chatId === chatId.toString()) && _id.botName === botName
+          : _id.chatId === chatId?.toString()) && _id.botName === botName
     );
     const totalTokens = result ? result.totalTokens : 0;
     const totalMessages = result ? result.totalMessages : 0;
