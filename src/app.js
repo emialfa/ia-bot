@@ -14,6 +14,8 @@ const rfs = require("rotating-file-stream");
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map((o) =>
   o.trim()
 );
+const WHATSAPP_BOTS_API_URL = process.env.WHATSAPP_BOTS_API_URL;
+const axios = require("axios");
 
 app.use(expressIP().getIpInfoMiddleware);
 app.set("trust proxy", true);
@@ -169,6 +171,59 @@ app.get("/hair-questionary/api/logs", (req, res) => {
     }
   });
 });
+
+app.get("/hair-questionary/api/whatsapp-bots", async (req, res) => {
+  try {
+    const bots = await axios.get(`${process.env.WHATSAPP_BOTS_API_URL}/bots`);
+    res.json(bots?.data);
+  } catch (error) {
+    console.error("Error al obtener bots:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
+app.get("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
+  try {
+    const bots = await axios.get(`${process.env.WHATSAPP_BOTS_API_URL}/bots/`+ req?.params?.id);
+    res.json(bots?.data);
+  } catch (error) {
+    console.error("Error al obtener bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
+app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
+  try {
+    const bots = await axios.post(`${process.env.WHATSAPP_BOTS_API_URL}/bots`, req?.body);
+    res.status(201).json(bots?.data);
+  } catch (error) {
+    console.error("Error al crear bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
+app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
+  try {
+    const bots = await axios.put(`${process.env.WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`, req?.body);
+    res.json(bots?.data);
+  } catch (error) {
+    console.error("Error al actualizar bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
+app.delete("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
+  try {
+    const bots = await axios.delete(`${process.env.WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`);
+    res.json(bots?.data);
+  } catch (error) {
+    console.error("Error al eliminar bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
+
+
 
 app.use("/hair-questionary/", express.static(path.join(__dirname, "dist")));
 
