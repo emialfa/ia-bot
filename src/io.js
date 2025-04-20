@@ -3,6 +3,7 @@ let questionaries = [];
 const userIps = [];
 let bots = [];
 
+const axios = require("axios");
 const openaiService = require("./services/openai.service");
 const openai = require("./config/openai.config");
 const chatInteractor = require("./interactors/chat.interactor");
@@ -20,6 +21,9 @@ const locationList = require("./utils/locationList");
 const clinicList = require("./utils/clinicList");
 const calculateClinics = require("./utils/calculateClinics");
 const e = require("cors");
+
+const pendingBotStateRequests = new Map();
+
 // (async () => {
 //   const firstResponse = await openaiService.generateMessage(
 //     openai,
@@ -153,15 +157,57 @@ const removeBot = (botId) => {
 
 const initializeIO = async (io) => {
   io.on("connection", async (socket) => {
-    generalLogs("New client connected", socket.id, undefined);
-    const clientIP =
+
+    const { type, token } = socket.handshake.auth;
+
+    if (type !== "whatsapp-bots-backend") {
+      generalLogs("New client connected", socket.id, undefined);
+      const clientIP =
       socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
-    generalLogs(
-      `Client connected from IP: ${clientIP}`,
-      socket.id,
-      undefined,
-      clientIP
-    );
+      generalLogs(
+        `Client connected from IP: ${clientIP}`,
+        socket.id,
+        undefined,
+        clientIP
+      );
+    }
+
+
+  // *********** whatsapp bots events **********
+
+    socket.on("whatsapp bot config", async (botId) => {
+
+      async function activarConexionSecundario(userId, botId) {
+        try {
+          const data = await axios.post(process.env.WHATSAPP_BOTS_API_URL + "/activar-websocket", { userId, botId });
+          socket?.emit("response whatsapp bot state", data.data);
+
+          console.log("🟢 Petición enviada al secundario para iniciar WebSocket");
+          pendingBotStateRequests.set(userId, {
+            botId,
+            socket
+          });
+        } catch (error) {
+          console.error("❌ Error al activar conexión del secundario:", error.message);
+        }
+      }
+
+      activarConexionSecundario(socket.id, botId);
+    });
+
+    socket.on("whatsapp bot state", async (data) => {
+      console.log("whatsapp bot state: ", data.userId, data);
+      const { userId } = data;
+      const pendingRequest = pendingBotStateRequests.get(userId);
+
+      const socketToEmit = io.sockets.sockets.get(userId);
+      console.log("socketToEmit", socketToEmit?.id);
+      socketToEmit?.emit("response whatsapp bot state", data);
+      // pendingRequest.socket.emit("response whatsapp bot state", data);
+    });
+
+
+  // *******************************************
 
     // ********* questionary events *********
 
@@ -1165,7 +1211,12 @@ const initializeIO = async (io) => {
       }
     });
 
-    // socket.on("disconnect", () => {
+    socket.on("disconnect", () => {
+      const userDisconnected = pendingBotStateRequests.get(socket.id);
+      if (userDisconnected) {
+        userDisconnected?.socket?.emit("whatsapp bot client disconnect", socket.id);
+        pendingBotStateRequests.delete(socket.id);
+      }
     //   generalLogs("Client disconnected", socket.id, undefined, clientIP);
 
     //   const questionaryIndex = questionaries.findIndex(
@@ -1203,7 +1254,7 @@ const initializeIO = async (io) => {
 
     //     return conversations.splice(conversationIndex, 1);
     //   }
-    // });
+    });
   });
 };
 

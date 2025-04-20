@@ -7,35 +7,35 @@ const { Server: SocketServer } = require("socket.io");
 const chatsRouter = require("./routes/chat.routes");
 const botsRouter = require("./routes/bot.routes");
 const leadsRouter = require("./routes/leads.routes");
-const expressIP = require('express-ip');
+const expressIP = require("express-ip");
 const fs = require("fs");
 const app = express();
 const rfs = require("rotating-file-stream");
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map((o) =>
+  o.trim()
+);
 
 app.use(expressIP().getIpInfoMiddleware);
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
 const server = http.createServer(app);
 const port = process.env.PORT || 5000;
 
 const io = new SocketServer(server, {
   path: "/hair-questionary/api/socket.io",
-  cors:
-    process.env.NODE_ENV === "development"
-      ? {
-          origin: "http://localhost:5173",
-        }
-      : {},
+  cors: {
+    origin: allowedOrigins,
+  },
   connectionStateRecovery: {
     maxDisconnectionDuration: 3 * 60 * 1000, // 3 minutos de recuperación
     skipMiddlewares: true,
   },
-  pingInterval: 30000,       // Envía un ping cada 30 segundos
-  pingTimeout: 180000,        // Espera hasta 60 segundos antes de desconectar
-  reconnectionAttempts: Infinity,            // Intentar reconectar indefinidamente
-  reconnectionDelay: 1000,                   // 1 segundo para el primer intento
-  reconnectionDelayMax: 5000,                // Hasta 5 segundos para los siguientes intentos
-  randomizationFactor: 0.5,                  // Para diversificar los intentos
+  pingInterval: 30000, // Envía un ping cada 30 segundos
+  pingTimeout: 180000, // Espera hasta 60 segundos antes de desconectar
+  reconnectionAttempts: Infinity, // Intentar reconectar indefinidamente
+  reconnectionDelay: 1000, // 1 segundo para el primer intento
+  reconnectionDelayMax: 5000, // Hasta 5 segundos para los siguientes intentos
+  randomizationFactor: 0.5, // Para diversificar los intentos
 });
 
 function getTimestamp() {
@@ -55,26 +55,26 @@ const colorMapping = {
   "\x1b[32m": "green", // Verde
   "\x1b[31m": "#c71010", // Rojo
   "\x1b[33m": "#b9882e", // Naranja
-  "\x1b[36m": "#247272",  // Cian
+  "\x1b[36m": "#247272", // Cian
 };
 
 // Función para convertir códigos ANSI a HTML
 function ansiToHtml(logText) {
   // Detecta si hay algún código de color ANSI en el texto
   const match = logText.match(/\x1b\[(3[1-7])m/);
-  
+
   if (match && colorMapping[match[0]]) {
     // Si hay código ANSI, envuelve el texto en un <span> con el color correspondiente
     const color = colorMapping[match[0]];
     const cleanText = logText.replace(/\x1b\[\d+m/g, "").replace("%s", ""); // Elimina los códigos ANSI del texto
     return `<span style="color: ${color};">${cleanText}</span>`;
   }
-  
+
   // Si no hay código ANSI, devuelve el texto tal cual
   return logText;
 }
 
-let logFileName = '';
+let logFileName = "";
 
 function getFormattedDate() {
   return getTimestamp().replace(/[/\s,:]/g, "-");
@@ -98,7 +98,9 @@ rfs.createStream(() => getLogFileName(), {
 
 function prependLog(message) {
   const logFilePath = path.join(logsDir, logFileName);
-  const logData = fs.existsSync(logFilePath) ? fs.readFileSync(logFilePath, "utf8") : "";
+  const logData = fs.existsSync(logFilePath)
+    ? fs.readFileSync(logFilePath, "utf8")
+    : "";
   fs.writeFileSync(logFilePath, `${message}\n${logData}`, "utf8");
 }
 
@@ -126,7 +128,7 @@ app.get("/hair-questionary/api/logs", (req, res) => {
       return;
     }
 
-    const logFiles = files.filter(file => file.endsWith(".log"));
+    const logFiles = files.filter((file) => file.endsWith(".log"));
 
     const selectedLog = req.query.file;
     if (selectedLog && logFiles.includes(selectedLog)) {
@@ -155,7 +157,10 @@ app.get("/hair-questionary/api/logs", (req, res) => {
             <h1>Archivos de Logs Disponibles</h1>
             <ul>
               ${logFiles
-                .map(file => `<li><a href="/hair-questionary/api/logs?file=${file}">${file}</a></li>`)
+                .map(
+                  (file) =>
+                    `<li><a href="/hair-questionary/api/logs?file=${file}">${file}</a></li>`
+                )
                 .join("")}
             </ul>
           </body>
