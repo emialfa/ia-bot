@@ -160,10 +160,10 @@ const initializeIO = async (io) => {
 
     const { type, token } = socket.handshake.auth;
 
+    const clientIP = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
+    
     if (type !== "whatsapp-bots-backend") {
       generalLogs("New client connected", socket.id, undefined);
-      const clientIP =
-      socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
       generalLogs(
         `Client connected from IP: ${clientIP}`,
         socket.id,

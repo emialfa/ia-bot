@@ -174,7 +174,7 @@ app.get("/hair-questionary/api/logs", (req, res) => {
 
 app.get("/hair-questionary/api/whatsapp-bots", async (req, res) => {
   try {
-    const bots = await axios.get(`${process.env.WHATSAPP_BOTS_API_URL}/bots`);
+    const bots = await axios.get(`${WHATSAPP_BOTS_API_URL}/bots`);
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al obtener bots:", error);
@@ -184,7 +184,7 @@ app.get("/hair-questionary/api/whatsapp-bots", async (req, res) => {
 
 app.get("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
-    const bots = await axios.get(`${process.env.WHATSAPP_BOTS_API_URL}/bots/`+ req?.params?.id);
+    const bots = await axios.get(`${WHATSAPP_BOTS_API_URL}/bots/`+ req?.params?.id);
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al obtener bot:", error);
@@ -194,7 +194,7 @@ app.get("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
 
 app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
   try {
-    const bots = await axios.post(`${process.env.WHATSAPP_BOTS_API_URL}/bots`, req?.body);
+    const bots = await axios.post(`${WHATSAPP_BOTS_API_URL}/bots`, req?.body);
     res.status(201).json(bots?.data);
   } catch (error) {
     console.error("Error al crear bot:", error);
@@ -204,7 +204,7 @@ app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
 
 app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
-    const bots = await axios.put(`${process.env.WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`, req?.body);
+    const bots = await axios.put(`${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`, req?.body);
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al actualizar bot:", error);
@@ -214,7 +214,7 @@ app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
 
 app.delete("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
-    const bots = await axios.delete(`${process.env.WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`);
+    const bots = await axios.delete(`${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`);
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al eliminar bot:", error);
