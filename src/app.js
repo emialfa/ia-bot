@@ -123,7 +123,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
-
 // **************************** GOOGLE AUTH ****************************
 const {
   GOOGLE_CLIENT_ID,
@@ -135,13 +134,13 @@ const {
 // Simula base de datos
 const userTokens = {}; // { userId: { access_token, refresh_token } }
 
-app.get('/hair-questionary/api/google/auth/:userId', (req, res) => {
+app.get("/hair-questionary/api/google/auth/:userId", (req, res) => {
   const { userId } = req.params;
 
   const scopes = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/calendar.events',
-  ].join(' ');
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events",
+  ].join(" ");
 
   const url = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&scope=${encodeURIComponent(
     scopes
@@ -150,31 +149,38 @@ app.get('/hair-questionary/api/google/auth/:userId', (req, res) => {
   res.redirect(url);
 });
 
-app.get('/hair-questionary/api/google/callback', async (req, res) => {
+app.get("/hair-questionary/api/google/callback", async (req, res) => {
   const { code, state: userId } = req.query;
 
   try {
-    const response = await axios.post('https://oauth2.googleapis.com/token', {
+    const response = await axios.post("https://oauth2.googleapis.com/token", {
       code,
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       redirect_uri: GOOGLE_REDIRECT_URI,
-      grant_type: 'authorization_code',
+      grant_type: "authorization_code",
     });
 
     const { access_token, refresh_token, expires_in } = response.data;
 
-    userTokens[userId] = { access_token, refresh_token, expires_at: Date.now() + expires_in * 1000 };
+    userTokens[userId] = {
+      access_token,
+      refresh_token,
+      expires_at: Date.now() + expires_in * 1000,
+    };
 
-    console.log(`Tokens guardados para el usuario ${userId}:`, access_token, refresh_token);
+    console.log(
+      `Tokens guardados para el usuario ${userId}:`,
+      access_token,
+      refresh_token
+    );
 
     res.redirect(`${FRONT_BASE_URL}/google-success?userId=${userId}`);
   } catch (error) {
     console.error(error.response?.data);
-    res.status(500).send('Error en la autorización');
+    res.status(500).send("Error en la autorización");
   }
 });
-
 
 app.use("/hair-questionary/api/chats", chatsRouter);
 app.use("/hair-questionary/api/bots", botsRouter);
@@ -243,7 +249,9 @@ app.get("/hair-questionary/api/whatsapp-bots", async (req, res) => {
 
 app.get("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
-    const bots = await axios.get(`${WHATSAPP_BOTS_API_URL}/bots/`+ req?.params?.id);
+    const bots = await axios.get(
+      `${WHATSAPP_BOTS_API_URL}/bots/` + req?.params?.id
+    );
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al obtener bot:", error);
@@ -254,10 +262,11 @@ app.get("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
 app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
   try {
     const { body } = req;
-    if (!body) return res.status(400).json({ message: "No se ha enviado el body" });
+    if (!body)
+      return res.status(400).json({ message: "No se ha enviado el body" });
 
     const { userId, ...bodyToSend } = body;
-    if (userId) {
+    if (userId && userTokens?.[userId]) {
       const { access_token, refresh_token } = userTokens[userId];
       bodyToSend.googleAccessToken = access_token;
       bodyToSend.googleRefreshToken = refresh_token;
@@ -273,18 +282,22 @@ app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
 app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
     const { body } = req;
-    if (!body) return res.status(400).json({ message: "No se ha enviado el body" });
+    if (!body)
+      return res.status(400).json({ message: "No se ha enviado el body" });
 
     const { userId, ...bodyToSend } = body;
     console.log(body);
-    if (userId) {
+    if (userId && userTokens?.[userId]) {
       const { access_token, refresh_token } = userTokens[userId];
       console.log("userId", userTokens[userId]);
       console.log("userTokens", access_token);
       bodyToSend.googleAccessToken = access_token;
       bodyToSend.googleRefreshToken = refresh_token;
     }
-    const bots = await axios.put(`${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`, bodyToSend);
+    const bots = await axios.put(
+      `${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`,
+      bodyToSend
+    );
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al actualizar bot:", error);
@@ -294,16 +307,15 @@ app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
 
 app.delete("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
-    const bots = await axios.delete(`${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`);
+    const bots = await axios.delete(
+      `${WHATSAPP_BOTS_API_URL}/bots/${req?.params?.id}`
+    );
     res.json(bots?.data);
   } catch (error) {
     console.error("Error al eliminar bot:", error);
     res.status(500).json({ message: error?.message });
   }
 });
-
-
-
 
 app.use("/hair-questionary/", express.static(path.join(__dirname, "dist")));
 
