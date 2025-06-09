@@ -10,6 +10,7 @@ const leadsRouter = require("./routes/leads.routes");
 const contactRouter = require("./routes/contact.routes");
 const messageFlowRouter = require("./routes/messageFlow.routes");
 const botMessageFlowRouter = require("./routes/botMessageFlow.routes");
+const whatsappConversationRouter = require("./routes/whatsappConversation.routes");
 const expressIP = require("express-ip");
 const fs = require("fs");
 const app = express();
@@ -188,6 +189,8 @@ app.use("/hair-questionary/api/leads", leadsRouter);
 app.use("/hair-questionary/api/contact", contactRouter);
 app.use("/hair-questionary/api/message-flow", messageFlowRouter);
 app.use("/hair-questionary/api/bot-message-flow", botMessageFlowRouter);
+app.use("/hair-questionary/api/whatsapp/conversation", whatsappConversationRouter);
+
 app.get("/hair-questionary/api/logs", (req, res) => {
   fs.readdir(logsDir, (err, files) => {
     if (err) {
