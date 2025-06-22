@@ -322,6 +322,24 @@ app.delete("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
 
 app.use("/hair-questionary/", express.static(path.join(__dirname, "dist")));
 
+app.get("/hair-questionary/api/whatsapp-logs", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${WHATSAPP_BOTS_API_URL}/logs?${Object.keys(req?.query)
+        .map((key) => `${key}=${req?.query[key]}`)
+        .join("&")}`,
+      {
+        responseType: 'text',
+      }
+    );
+
+    res.send(response.data);
+  } catch (error) {
+    console.error("Error al obtener logs:", error);
+    res.status(500).send("Error al obtener logs.");
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
