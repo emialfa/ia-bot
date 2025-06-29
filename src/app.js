@@ -189,7 +189,10 @@ app.use("/hair-questionary/api/leads", leadsRouter);
 app.use("/hair-questionary/api/contact", contactRouter);
 app.use("/hair-questionary/api/message-flow", messageFlowRouter);
 app.use("/hair-questionary/api/bot-message-flow", botMessageFlowRouter);
-app.use("/hair-questionary/api/whatsapp/conversation", whatsappConversationRouter);
+app.use(
+  "/hair-questionary/api/whatsapp/conversation",
+  whatsappConversationRouter
+);
 
 app.get("/hair-questionary/api/logs", (req, res) => {
   fs.readdir(logsDir, (err, files) => {
@@ -308,6 +311,19 @@ app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   }
 });
 
+app.put("/hair-questionary/api/whatsapp-bots/:botId/main-message-flow/:messageFlowId", async (req, res) => {
+    try {
+      const bots = await axios.put(
+        `${WHATSAPP_BOTS_API_URL}/bot/${req?.params?.botId}/main-message-flow/${req?.params?.messageFlowId}`,
+        {}
+      );
+      res.json(bots?.data);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 app.delete("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
     const bots = await axios.delete(
@@ -329,7 +345,7 @@ app.get("/hair-questionary/api/whatsapp-logs", async (req, res) => {
         .map((key) => `${key}=${req?.query[key]}`)
         .join("&")}`,
       {
-        responseType: 'text',
+        responseType: "text",
       }
     );
 

@@ -25,7 +25,20 @@ const contactController = {
       res.status(500).json({ error: error.message });
     }
   },
-  
+
+  async createContatAndMessageFlow(req, res) {
+    try {
+      const bots = await axios.post(
+        `${WHATSAPP_BOTS_API_URL}/contact/message-flow`,
+        req?.body
+      );
+      res.status(201).json(bots?.data);
+    }
+    catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   async getAll(req, res) {
     try {
       const bots = await axios.get(
