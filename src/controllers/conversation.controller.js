@@ -25,6 +25,17 @@ const contactController = {
       res.status(500).json({ error: error.message });
     }
   },
+
+  async deactivate(req, res) {
+    try {
+      const bots = await axios.put(
+        `${WHATSAPP_BOTS_API_URL}/conversations/deactivate/` + req?.params?.id, {}
+      );
+      res.json(bots?.data);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 };
 
 module.exports = contactController;
