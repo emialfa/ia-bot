@@ -285,6 +285,20 @@ app.post("/hair-questionary/api/whatsapp-bots", async (req, res) => {
   }
 });
 
+app.post("/hair-questionary/api/whatsapp-bots/external-message", async (req, res) => {
+  try {
+    const { body } = req;
+    if (!body)
+      return res.status(400).json({ message: "No se ha enviado el body" });
+
+    const bots = await axios.post(`${WHATSAPP_BOTS_API_URL}/bot/external-message`, body);
+    res.status(201).json(bots?.data);
+  } catch (error) {
+    console.error("Error al crear bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
 app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   try {
     const { body } = req;
