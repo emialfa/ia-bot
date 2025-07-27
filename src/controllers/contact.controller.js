@@ -1,5 +1,6 @@
 const WHATSAPP_BOTS_API_URL = process.env.WHATSAPP_BOTS_API_URL;
 const axios = require("axios");
+const { deleteMany } = require("../models/Chat.model");
 
 const contactController = {
   async create(req, res) {
@@ -10,7 +11,7 @@ const contactController = {
       );
       res.status(201).json(bots?.data);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error?.response?.data?.message || error.message });
     }
   },
 
@@ -35,7 +36,7 @@ const contactController = {
       res.status(201).json(bots?.data);
     }
     catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error?.response?.data?.message || error.message });
     }
   },
 
@@ -85,6 +86,18 @@ const contactController = {
       res.status(500).json({ error: error.message });
     }
   },
+
+  async deleteMany(req, res) {
+    try {
+      const bots = await axios.delete(
+        `${WHATSAPP_BOTS_API_URL}/contacts`,
+        { data: req?.body }
+      );
+      res.json(bots?.data);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 };
 
 module.exports = contactController;

@@ -9,6 +9,7 @@ router.post("/message-flow", contact.createContatAndMessageFlow);
 router.get("/", contact.getAll);
 router.get("/:id", contact.getById);
 router.put("/:id", contact.update);
+router.delete("/bulk", contact.deleteMany);
 router.delete("/:id", contact.delete);
 
 module.exports = router;

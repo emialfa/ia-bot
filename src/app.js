@@ -325,6 +325,19 @@ app.put("/hair-questionary/api/whatsapp-bots/:id", async (req, res) => {
   }
 });
 
+app.put("/hair-questionary/api/whatsapp-bots/:id/logout", async (req, res) => {
+  try {
+    const bots = await axios.put(
+      `${WHATSAPP_BOTS_API_URL}/bot/${req?.params?.id}/logout`,
+      req.body || {}
+    );
+    res.json(bots?.data);
+  } catch (error) {
+    console.error("Error al desloguear bot:", error);
+    res.status(500).json({ message: error?.message });
+  }
+});
+
 app.put("/hair-questionary/api/whatsapp-bots/:botId/main-message-flow/:messageFlowId", async (req, res) => {
     try {
       const bots = await axios.put(
