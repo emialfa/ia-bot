@@ -36,6 +36,7 @@ const contactController = {
       res.status(201).json(bots?.data);
     }
     catch (error) {
+      console.log(error);
       res.status(500).json({ error: error?.response?.data?.message || error.message });
     }
   },
